@@ -7,6 +7,8 @@ import { formatQuantityDisplay } from '../utils/formatWeight';
 import { ListLoadMoreFooter, LOAD_MORE_CHUNK } from './ListLoadMoreFooter';
 import { applyInventoryRows, parseInventoryCsv } from '../utils/inventoryCsv';
 
+type StockFilterTab = 'all' | 'low' | 'out';
+
 export function ProductsScreen() {
   const products = useStore((state) => state.products);
   const deleteProduct = useStore((state) => state.deleteProduct);
@@ -14,14 +16,35 @@ export function ProductsScreen() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productPendingDelete, setProductPendingDelete] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [stockFilterTab, setStockFilterTab] = useState<StockFilterTab>('all');
   const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
   const inventoryFileInputRef = useRef<HTMLInputElement>(null);
 
+  const stockFilterCounts = useMemo(() => {
+    let lowStockCount = 0;
+    let outOfStockCount = 0;
+    for (const product of products) {
+      if (product.stock === 0) {
+        outOfStockCount += 1;
+      } else if (product.stock < 10) {
+        lowStockCount += 1;
+      }
+    }
+    return { lowStockCount, outOfStockCount };
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
-    return products.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [products, searchQuery]);
+    return products.filter((product) => {
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStockFilter =
+        stockFilterTab === 'all'
+          ? true
+          : stockFilterTab === 'low'
+            ? product.stock > 0 && product.stock < 10
+            : product.stock === 0;
+      return matchesSearch && matchesStockFilter;
+    });
+  }, [products, searchQuery, stockFilterTab]);
 
   const listTotalCount = filteredProducts.length;
 
@@ -31,7 +54,7 @@ export function ProductsScreen() {
 
   useEffect(() => {
     setVisibleProductCount(LOAD_MORE_CHUNK);
-  }, [searchQuery]);
+  }, [searchQuery, stockFilterTab]);
 
   const handleLoadMoreProducts = () => {
     setVisibleProductCount((n) => n + LOAD_MORE_CHUNK);
@@ -157,13 +180,75 @@ export function ProductsScreen() {
             <Upload className="h-5 w-5" />
           </button>
         </div>
+        <div className="mt-2" role="group" aria-label="Filter products by stock">
+          <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
+            {(
+              [
+                {
+                  id: 'all' as const,
+                  label: 'All',
+                  count: products.length,
+                  activeClass: 'border-green-300 bg-green-50 text-green-800',
+                },
+                {
+                  id: 'low' as const,
+                  label: 'Low stock',
+                  count: stockFilterCounts.lowStockCount,
+                  activeClass: 'border-orange-300 bg-orange-100 text-orange-800',
+                },
+                {
+                  id: 'out' as const,
+                  label: 'Out of stock',
+                  count: stockFilterCounts.outOfStockCount,
+                  activeClass: 'border-red-200 bg-red-50 text-red-800',
+                },
+              ] as const
+            ).map((chip) => {
+              const isSelected = stockFilterTab === chip.id;
+              const inactiveClass = 'border-gray-200 bg-white text-gray-600 active:bg-gray-50';
+
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => setStockFilterTab(chip.id)}
+                  className={`inline-flex shrink-0 min-h-9 items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium shadow-sm transition active:scale-[0.98] ${
+                    isSelected ? chip.activeClass : inactiveClass
+                  }`}
+                >
+                  <span>{chip.label}</span>
+                  <span
+                    className={`rounded-full px-1.5 py-0 text-xs font-semibold ${
+                      isSelected ? 'bg-white/60 text-current' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {chip.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          {stockFilterTab === 'low' ? (
+            <p className="mt-1.5 text-xs text-gray-500">Stock below 10, excluding out of stock.</p>
+          ) : null}
+          {stockFilterTab === 'out' ? (
+            <p className="mt-1.5 text-xs text-gray-500">Items with zero stock.</p>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex flex-1 min-h-0 flex-col">
         <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-2">
           {visibleProducts.length === 0 ? (
             <div className="text-center text-gray-500 mt-12">
-              <p>No products found</p>
+              <p>
+                {stockFilterTab === 'all'
+                  ? 'No products found'
+                  : stockFilterTab === 'low'
+                    ? 'No low-stock products'
+                    : 'No out-of-stock products'}
+              </p>
             </div>
           ) : (
             visibleProducts.map((product) => {
