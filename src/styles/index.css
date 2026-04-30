@@ -1,0 +1,29 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* Invoice print: show only #invoice-print-area (see InvoiceModal). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #invoice-print-area,
+  #invoice-print-area * {
+    visibility: visible;
+  }
+
+  #invoice-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    max-height: none !important;
+    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    padding: 1rem !important;
+  }
+}

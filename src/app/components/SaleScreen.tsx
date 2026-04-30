@@ -1,0 +1,262 @@
+import { useState, useMemo, useEffect } from 'react';
+import { useStore, Product } from '../store';
+import { Search, Plus, Minus, Trash2, Banknote, Smartphone } from 'lucide-react';
+import { toast } from 'sonner';
+import { LiquidQuantityInput } from './LiquidQuantityInput';
+import { WeightQuantityInput } from './WeightQuantityInput';
+import { QuantityModal } from './QuantityModal';
+import { formatQuantityDisplay } from '../utils/formatWeight';
+import { ListLoadMoreFooter, LOAD_MORE_CHUNK } from './ListLoadMoreFooter';
+
+interface SaleScreenProps {
+  onComplete: () => void;
+}
+
+export function SaleScreen({ onComplete }: SaleScreenProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
+  const products = useStore((state) => state.products);
+  const cart = useStore((state) => state.cart);
+  const updateCartQuantity = useStore((state) => state.updateCartQuantity);
+  const removeFromCart = useStore((state) => state.removeFromCart);
+  const completeSale = useStore((state) => state.completeSale);
+
+  const getStockStatus = (product: Product) => {
+    if (product.stock === 0) {
+      return { text: 'Out of stock', color: 'text-red-600', dot: '🔴' };
+    }
+    if (product.stock < 10) {
+      return { text: 'Low stock', color: 'text-orange-500', dot: '🟡' };
+    }
+    return { text: 'In stock', color: 'text-green-600', dot: '🟢' };
+  };
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [products, searchQuery]);
+
+  const listTotalCount = filteredProducts.length;
+
+  const visibleProducts = useMemo(() => {
+    return filteredProducts.slice(0, visibleProductCount);
+  }, [filteredProducts, visibleProductCount]);
+
+  useEffect(() => {
+    setVisibleProductCount(LOAD_MORE_CHUNK);
+  }, [searchQuery]);
+
+  const handleLoadMoreProducts = () => {
+    setVisibleProductCount((n) => n + LOAD_MORE_CHUNK);
+  };
+
+  const cartTotal = useMemo(() => {
+    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  }, [cart]);
+
+  const handleCompleteSale = (paymentMethod: 'cash' | 'upi') => {
+    if (cart.length === 0) {
+      toast.error('Add items to cart first');
+      return;
+    }
+    completeSale(paymentMethod);
+    toast.success('Sale completed successfully!');
+    onComplete();
+  };
+
+  const handleAddToCart = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleConfirmQuantity = (quantity: number) => {
+    if (selectedProduct) {
+      const existingItem = cart.find((item) => item.product.id === selectedProduct.id);
+      if (existingItem) {
+        updateCartQuantity(selectedProduct.id, existingItem.quantity + quantity);
+      } else {
+        const tempCart = [...cart, { product: selectedProduct, quantity }];
+        useStore.setState({ cart: tempCart });
+      }
+      setSelectedProduct(null);
+      toast.success('Added to cart');
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full min-h-0 bg-gray-50 pb-16">
+      <div className="shrink-0 p-4 bg-white border-b border-gray-200">
+        <h1 className="text-xl font-bold text-gray-900 mb-3">New Sale</h1>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
+            autoFocus
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-1 min-h-0 flex-col">
+        <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
+          {visibleProducts.length === 0 ? (
+            <div className="text-center text-gray-500 mt-12">
+              <p>No products found</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {visibleProducts.map((product) => {
+                const status = getStockStatus(product);
+                const isOutOfStock = product.stock === 0;
+                const unitLabel = product.priceUnit || product.unit || 'item';
+
+                return (
+                  <button
+                    key={product.id}
+                    type="button"
+                    disabled={isOutOfStock}
+                    onClick={() => handleAddToCart(product)}
+                    className={`min-h-[5.5rem] w-full rounded-xl border p-3 text-left shadow-sm transition-colors active:scale-[0.98] ${
+                      isOutOfStock
+                        ? 'cursor-not-allowed border-gray-100 bg-gray-100 opacity-60'
+                        : 'border-gray-100 bg-white active:bg-green-50'
+                    }`}
+                  >
+                    <div className="line-clamp-2 text-sm font-semibold leading-snug text-gray-900">
+                      {product.name}
+                    </div>
+                    <div className="mt-1.5 text-xs text-gray-600">
+                      ₹{product.price}
+                      <span className="text-gray-400"> / {unitLabel}</span>
+                    </div>
+                    <div
+                      className={`mt-2 flex items-center gap-1 text-[11px] font-medium leading-none ${status.color}`}
+                    >
+                      <span aria-hidden>{status.dot}</span>
+                      <span className="truncate">{status.text}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <ListLoadMoreFooter
+          totalCount={listTotalCount}
+          visibleCount={visibleProductCount}
+          onLoadMore={handleLoadMoreProducts}
+        />
+      </div>
+
+      {cart.length > 0 && (
+        <div className="shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
+          <div className="max-h-48 overflow-y-auto p-4 space-y-2">
+            {cart.map((item) => (
+              <div
+                key={item.product.id}
+                className="flex items-center justify-between gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-gray-900 truncate">
+                    {item.product.name}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    ₹{item.product.price} × {formatQuantityDisplay(item.quantity, item.product.unit)}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const decrement = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
+                      updateCartQuantity(item.product.id, Math.max(decrement, item.quantity - decrement));
+                    }}
+                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                  <div className="min-w-16 text-center">
+                    <div className="font-semibold text-gray-900 text-sm">
+                      {formatQuantityDisplay(item.quantity, item.product.unit)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const increment = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
+                      updateCartQuantity(item.product.id, item.quantity + increment);
+                    }}
+                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => removeFromCart(item.product.id)}
+                    className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center active:bg-red-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="border-t border-gray-200 p-4 space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-lg font-semibold text-gray-900">Total</span>
+              <span className="text-2xl font-bold text-green-600">
+                ₹{cartTotal.toFixed(2)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleCompleteSale('cash')}
+                className="bg-green-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-green-700 transition-colors"
+              >
+                <Banknote className="w-5 h-5" />
+                Cash
+              </button>
+              <button
+                onClick={() => handleCompleteSale('upi')}
+                className="bg-blue-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
+              >
+                <Smartphone className="w-5 h-5" />
+                UPI
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedProduct && selectedProduct.unit === 'litre' && (
+        <LiquidQuantityInput
+          productName={selectedProduct.name}
+          pricePerLitre={selectedProduct.price}
+          onConfirm={handleConfirmQuantity}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
+
+      {selectedProduct && selectedProduct.unit === 'kg' && (
+        <WeightQuantityInput
+          productName={selectedProduct.name}
+          pricePerKg={selectedProduct.price}
+          onConfirm={handleConfirmQuantity}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
+
+      {selectedProduct && selectedProduct.unit === 'piece' && (
+        <QuantityModal
+          product={selectedProduct}
+          onConfirm={handleConfirmQuantity}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
+    </div>
+  );
+}
