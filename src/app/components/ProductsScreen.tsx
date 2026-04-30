@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { useStore, Product } from '../store';
-import { Plus, Edit, Trash2, Search, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { ProductModal } from './ProductModal';
 import { formatQuantityDisplay } from '../utils/formatWeight';
@@ -12,6 +12,7 @@ export function ProductsScreen() {
   const deleteProduct = useStore((state) => state.deleteProduct);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [productPendingDelete, setProductPendingDelete] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
   const inventoryFileInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +47,17 @@ export function ProductsScreen() {
     setEditingProduct(null);
   };
 
+  const handleDeleteClick = (product: Product) => {
+    setProductPendingDelete(product);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!productPendingDelete) return;
+    deleteProduct(productPendingDelete.id);
+    toast.success('Product deleted');
+    setProductPendingDelete(null);
+  };
+
   const getStockStatus = (product: Product) => {
     if (product.stock === 0) {
       return { text: 'Out of stock', color: 'text-red-600', dot: '🔴' };
@@ -58,6 +70,26 @@ export function ProductsScreen() {
 
   const handleInventoryUploadClick = () => {
     inventoryFileInputRef.current?.click();
+  };
+
+  const handleDownloadTemplate = () => {
+    const templateCsv = [
+      'name,price,stock,unit,priceUnit,id',
+      'Apple,120,25,kg,kg,',
+      'Milk,60,40,litre,litre,',
+      'Soap,35,100,piece,piece,',
+    ].join('\n');
+
+    const blob = new Blob([templateCsv], { type: 'text/csv;charset=utf-8;' });
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = 'inventory-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(downloadUrl);
+    toast.success('Template downloaded');
   };
 
   const handleInventoryFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,6 +142,14 @@ export function ProductsScreen() {
           />
           <button
             type="button"
+            onClick={handleDownloadTemplate}
+            aria-label="Download inventory template"
+            className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-blue-700 active:bg-gray-100"
+          >
+            <Download className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
             onClick={handleInventoryUploadClick}
             aria-label="Upload inventory CSV"
             className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-green-700 active:bg-gray-100"
@@ -160,7 +200,7 @@ export function ProductsScreen() {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => deleteProduct(product.id)}
+                          onClick={() => handleDeleteClick(product)}
                           className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center active:bg-red-100"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -190,6 +230,34 @@ export function ProductsScreen() {
 
       {isModalOpen && (
         <ProductModal product={editingProduct} onClose={handleCloseModal} />
+      )}
+
+      {productPendingDelete && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
+          <div className="w-full rounded-t-3xl bg-white p-4 shadow-xl sm:max-w-sm sm:rounded-2xl">
+            <h2 className="text-lg font-bold text-gray-900">Delete Product</h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Are you sure you want to delete{' '}
+              <span className="font-semibold text-gray-900">{productPendingDelete.name}</span>?
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setProductPendingDelete(null)}
+                className="rounded-xl border border-gray-200 py-3 font-semibold text-gray-700 active:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="rounded-xl bg-red-500 py-3 font-semibold text-white active:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -3,11 +3,13 @@ import {
   ArrowLeft,
   ChevronRight,
   Crown,
+  KeyRound,
   LogOut,
   Store,
   UserRound,
   X,
 } from 'lucide-react';
+import { ChangePasswordScreen } from './ChangePasswordScreen';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -59,6 +61,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [activePlaceholder, setActivePlaceholder] = useState<'' | 'profile' | 'shop' | 'plan'>('');
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -77,6 +80,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const handleClosePlaceholder = () => {
     setActivePlaceholder('');
   };
+
+  if (isChangePasswordOpen) {
+    return <ChangePasswordScreen onBack={() => setIsChangePasswordOpen(false)} />;
+  }
 
   const placeholderContentMap = {
     profile: {
@@ -148,6 +155,15 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               subtitle="View Plans / Upgrade"
               badge={<Badge label="Active" variant="success" />}
               onClick={() => handleOpenPlaceholder('plan')}
+            />
+          </SettingsCard>
+
+          <SettingsCard>
+            <SettingsItem
+              icon={KeyRound}
+              title="Change Password"
+              subtitle="Update your login password"
+              onClick={() => setIsChangePasswordOpen(true)}
             />
           </SettingsCard>
 
