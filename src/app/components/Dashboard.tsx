@@ -19,9 +19,27 @@ export function Dashboard({ onNewSale, onViewProducts, onViewHistory }: Dashboar
       .reduce((sum, t) => sum + t.total, 0);
   }, [transactions]);
 
+  const yesterdaysSales = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    return transactions
+      .filter((t) => {
+        const transactionDate = new Date(t.timestamp);
+        return transactionDate >= yesterday && transactionDate < today;
+      })
+      .reduce((sum, t) => sum + t.total, 0);
+  }, [transactions]);
+
   const todaysProfit = useMemo(() => {
     return Math.round(todaysSales * 0.15);
   }, [todaysSales]);
+
+  const yesterdaysProfit = useMemo(() => {
+    return Math.round(yesterdaysSales * 0.15);
+  }, [yesterdaysSales]);
 
   const recentTransactions = useMemo(() => {
     const today = new Date();
@@ -39,20 +57,49 @@ export function Dashboard({ onNewSale, onViewProducts, onViewHistory }: Dashboar
       </div>
 
       <div className="flex-1 overflow-y-auto pb-20 p-4 space-y-4">
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <IndianRupee className="w-5 h-5" />
-            <span className="text-sm font-medium opacity-90">Today's Sales</span>
+        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-green-600 to-emerald-700 text-white shadow-lg shadow-green-900/10">
+          <div className="p-5 pb-4">
+            <div className="flex items-center gap-2 text-white/90">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+                <IndianRupee className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-semibold tracking-wide">Sales</span>
+            </div>
+            <p className="mt-4 text-xs font-medium uppercase tracking-wider text-white/70">Today</p>
+            <p className="mt-1 text-3xl font-bold tabular-nums tracking-tight">
+              ₹{todaysSales.toFixed(2)}
+            </p>
           </div>
-          <div className="text-4xl font-bold">₹{todaysSales.toFixed(2)}</div>
+          <div className="border-t border-white/20 bg-black/10 px-5 py-3.5">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-white/80">Yesterday</span>
+              <span className="text-base font-semibold tabular-nums text-white">
+                ₹{yesterdaysSales.toFixed(2)}
+              </span>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-green-600" />
-            <span className="text-sm font-medium text-gray-600">Estimated Profit</span>
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50">
+              <TrendingUp className="h-5 w-5 text-green-600" />
+            </div>
+            <span className="text-sm font-semibold text-gray-900">Estimated profit</span>
+            <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-500">
+              ~15%
+            </span>
           </div>
-          <div className="text-2xl font-bold text-gray-900">₹{todaysProfit}</div>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-baseline justify-between gap-3 border-b border-gray-100 pb-3">
+              <span className="text-sm text-gray-500">Today</span>
+              <span className="text-xl font-bold tabular-nums text-gray-900">₹{todaysProfit}</span>
+            </div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm text-gray-500">Yesterday</span>
+              <span className="text-lg font-semibold tabular-nums text-gray-600">₹{yesterdaysProfit}</span>
+            </div>
+          </div>
         </div>
 
         <button
