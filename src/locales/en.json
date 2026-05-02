@@ -33,7 +33,7 @@
     "title": "Products",
     "subtitle": "Sell and manage your inventory.",
     "tab_sell": "Sell",
-    "tab_products": "Products"
+    "tab_inventory": "Inventory"
   },
   "dashboard": {
     "title": "My Shop",
@@ -41,7 +41,7 @@
     "sales": "Sales",
     "estimated_profit": "Estimated profit",
     "new_sale": "+ New Sale",
-    "products": "Products",
+    "products": "Inventory",
     "reports": "Reports",
     "recent_sales": "Recent Sales"
   },
@@ -87,7 +87,7 @@
     "preset_2_kg": "2 kg"
   },
   "inventory": {
-    "title": "Products",
+    "title": "Inventory",
     "search_products": "Search products...",
     "filter_stock_aria": "Filter products by stock",
     "all": "All",

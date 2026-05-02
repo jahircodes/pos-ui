@@ -1,11 +1,11 @@
 /**
- * Sell + inventory hub: tabbed Sell (default) and Products, single bottom-nav destination.
+ * Sell + inventory hub: tabbed Sell (default) and Inventory, single bottom-nav destination.
  */
 import { useTranslation } from 'react-i18next';
 import { SaleScreen } from './SaleScreen';
 import { ProductsScreen } from './ProductsScreen';
 
-export type SaleProductsHubTab = 'sell' | 'products';
+export type SaleProductsHubTab = 'sell' | 'inventory';
 
 interface SaleProductsHubScreenProps {
   hubTab: SaleProductsHubTab;
@@ -41,14 +41,14 @@ export function SaleProductsHubScreen({
           </button>
           <button
             type="button"
-            onClick={() => onHubTabChange('products')}
+            onClick={() => onHubTabChange('inventory')}
             className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${
-              hubTab === 'products'
+              hubTab === 'inventory'
                 ? 'bg-green-600 text-white shadow-sm'
                 : 'bg-gray-100 text-gray-600 active:bg-gray-200'
             }`}
           >
-            {t('sales_hub.tab_products')}
+            {t('sales_hub.tab_inventory')}
           </button>
         </div>
       </header>

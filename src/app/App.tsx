@@ -26,7 +26,7 @@ export default function App() {
   };
 
   const handleViewProducts = () => {
-    setShopHubTab('products');
+    setShopHubTab('inventory');
     setActiveTab('shop');
   };
 

@@ -33,7 +33,7 @@
     "title": "பொருள்கள்",
     "subtitle": "விற்பனை மற்றும் இருப்பு.",
     "tab_sell": "விற்பனை",
-    "tab_products": "பொருள்கள்"
+    "tab_inventory": "இருப்பு"
   },
   "dashboard": {
     "title": "என் கடை",
@@ -41,7 +41,7 @@
     "sales": "விற்பனை",
     "estimated_profit": "மதிப்பிட்ட லாபம்",
     "new_sale": "+ புதிய விற்பனை",
-    "products": "பொருள்கள்",
+    "products": "இருப்பு",
     "reports": "அறிக்கை",
     "recent_sales": "சமீப விற்பனை"
   },
@@ -87,7 +87,7 @@
     "preset_2_kg": "2 கிலோ"
   },
   "inventory": {
-    "title": "பொருள்கள்",
+    "title": "இருப்பு",
     "search_products": "பொருள் தேடு...",
     "filter_stock_aria": "இருப்பு வாரியாக வடிகட்டு",
     "all": "எல்லாம்",
