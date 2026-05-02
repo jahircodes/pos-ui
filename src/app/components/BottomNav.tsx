@@ -1,8 +1,8 @@
-import { Home, ShoppingCart, Package, History, Settings, Store } from 'lucide-react';
+import { Building2, Home, ShoppingCart, Package, History, Settings } from 'lucide-react';
 
 interface BottomNavProps {
-  activeTab: 'home' | 'sale' | 'products' | 'history' | 'shops' | 'settings';
-  onTabChange: (tab: 'home' | 'sale' | 'products' | 'history' | 'shops' | 'settings') => void;
+  activeTab: 'home' | 'sale' | 'products' | 'history' | 'business' | 'settings';
+  onTabChange: (tab: 'home' | 'sale' | 'products' | 'history' | 'business' | 'settings') => void;
 }
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
@@ -11,7 +11,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
     { id: 'sale' as const, icon: ShoppingCart, label: 'Sale' },
     { id: 'products' as const, icon: Package, label: 'Products' },
     { id: 'history' as const, icon: History, label: 'History' },
-    { id: 'shops' as const, icon: Store, label: 'Shops' },
+    { id: 'business' as const, icon: Building2, label: 'Business' },
     { id: 'settings' as const, icon: Settings, label: 'Settings' },
   ];
 

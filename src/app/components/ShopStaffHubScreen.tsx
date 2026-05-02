@@ -126,8 +126,8 @@ export function ShopStaffHubScreen() {
     <div className="flex min-h-0 flex-1 flex-col bg-gray-50">
       <header className="sticky top-0 z-20 shrink-0 border-b border-gray-200 bg-white">
         <div className="p-4 pb-3">
-          <h1 className="text-2xl font-bold text-gray-900">Shops &amp; Staff</h1>
-          <p className="mt-0.5 text-sm text-gray-500">Switch shop, then manage staff or locations.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Business</h1>
+          <p className="mt-0.5 text-sm text-gray-500">Shops, staff, and switching between locations.</p>
         </div>
 
         <div className="relative px-4 pb-3">

@@ -10,7 +10,7 @@ import { ShopStaffHubScreen } from './components/ShopStaffHubScreen';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    'home' | 'sale' | 'products' | 'history' | 'shops' | 'settings'
+    'home' | 'sale' | 'products' | 'history' | 'business' | 'settings'
   >('home');
 
   const handleNewSale = () => {
@@ -36,7 +36,7 @@ export default function App() {
         {activeTab === 'sale' && <SaleScreen onComplete={handleSaleComplete} />}
         {activeTab === 'products' && <ProductsScreen />}
         {activeTab === 'history' && <HistoryScreen />}
-        {activeTab === 'shops' && <ShopStaffHubScreen />}
+        {activeTab === 'business' && <ShopStaffHubScreen />}
         {activeTab === 'settings' && <SettingsScreen />}
       </div>
 
