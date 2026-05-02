@@ -2,7 +2,7 @@
  * Mobile-first staff management UI for adding, editing, and removing staff members.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ChevronDown, MoreVertical, Trash2, UserPlus2, Users, X } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Trash2, UserPlus2, Users, X } from 'lucide-react';
 
 type StaffRole = 'admin' | 'staff';
 
@@ -406,12 +406,17 @@ export function Modal({ isOpen, title, children, onClose }: ModalProps) {
 }
 
 /**
- * Renders add/edit staff form modal with simple mobile-friendly fields.
+ * Renders add/edit staff modal: add flow uses password fields and fixed staff role;
+ * edit flow updates name and mobile only.
  */
 function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFormModalProps) {
   const [name, setName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [role, setRole] = useState<StaffRole>('staff');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMismatchMessage, setPasswordMismatchMessage] = useState('');
+
+  const isAddMode = !initialStaffMember;
 
   useEffect(() => {
     if (!isOpen) {
@@ -420,10 +425,14 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
 
     setName(initialStaffMember?.name ?? '');
     setMobileNumber(initialStaffMember?.mobileNumber ?? '');
-    setRole(initialStaffMember?.role ?? 'staff');
+    setPassword('');
+    setConfirmPassword('');
+    setPasswordMismatchMessage('');
   }, [isOpen, initialStaffMember]);
 
-  const isSaveDisabled = !name.trim() || !mobileNumber.trim();
+  const isSaveDisabled = isAddMode
+    ? !name.trim() || !mobileNumber.trim() || !password || !confirmPassword
+    : !name.trim() || !mobileNumber.trim();
 
   return (
     <Modal
@@ -439,11 +448,19 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
             return;
           }
 
+          if (isAddMode) {
+            if (password !== confirmPassword) {
+              setPasswordMismatchMessage('Passwords do not match');
+              return;
+            }
+            setPasswordMismatchMessage('');
+          }
+
           onSave(
             {
               name: name.trim(),
               mobileNumber: mobileNumber.trim(),
-              role,
+              role: isAddMode ? 'staff' : initialStaffMember.role,
             },
             initialStaffMember?.staffId
           );
@@ -478,23 +495,49 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
           />
         </div>
 
-        <div>
-          <label htmlFor="staff-role" className="mb-1 block text-sm font-medium text-gray-700">
-            Role
-          </label>
-          <div className="relative">
-            <select
-              id="staff-role"
-              value={role}
-              onChange={(event) => setRole(event.target.value as StaffRole)}
-              className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3 pr-10 text-base outline-none focus:border-green-500"
-            >
-              <option value="admin">Admin</option>
-              <option value="staff">Staff</option>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
-          </div>
-        </div>
+        {isAddMode ? (
+          <>
+            <div>
+              <label htmlFor="staff-password" className="mb-1 block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="staff-password"
+                type="password"
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setPasswordMismatchMessage('');
+                }}
+                placeholder="Enter password"
+                autoComplete="new-password"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
+              />
+            </div>
+            <div>
+              <label htmlFor="staff-confirm-password" className="mb-1 block text-sm font-medium text-gray-700">
+                Confirm Password
+              </label>
+              <input
+                id="staff-confirm-password"
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => {
+                  setConfirmPassword(event.target.value);
+                  setPasswordMismatchMessage('');
+                }}
+                placeholder="Confirm password"
+                autoComplete="new-password"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
+              />
+            </div>
+            {passwordMismatchMessage ? (
+              <p className="text-sm text-red-600" role="alert">
+                {passwordMismatchMessage}
+              </p>
+            ) : null}
+          </>
+        ) : null}
 
         <div className="grid grid-cols-2 gap-3 pt-2">
           <Button label="Cancel" variant="secondary" onClick={onClose} />
