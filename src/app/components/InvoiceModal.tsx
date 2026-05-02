@@ -1,9 +1,11 @@
 /**
  * Invoice detail modal with screen layout and browser print (Phase 1: window.print + print CSS).
  */
+import { useTranslation } from 'react-i18next';
 import { Transaction } from '../store';
 import { X, Receipt, Printer } from 'lucide-react';
 import { formatQuantityDisplay } from '../utils/formatWeight';
+import { getAppLocale } from '../../i18n.js';
 
 interface InvoiceModalProps {
   transaction: Transaction;
@@ -15,7 +17,16 @@ function handlePrintInvoice() {
   window.print();
 }
 
+function paymentLabel(method: string, t: (key: string) => string) {
+  if (method === 'cash') return t('sales.payment_cash');
+  if (method === 'upi') return t('sales.payment_upi');
+  return method;
+}
+
 export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
+  const { t } = useTranslation();
+  const dateLocale = getAppLocale();
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
       <div
@@ -25,13 +36,13 @@ export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <Receipt className="h-6 w-6 shrink-0 text-green-600 print:text-black" />
-            <h2 className="text-xl font-bold text-gray-900 print:text-black">Invoice</h2>
+            <h2 className="text-xl font-bold text-gray-900 print:text-black">{t('history.invoice')}</h2>
           </div>
           <div className="flex shrink-0 gap-2 print:hidden">
             <button
               type="button"
               onClick={handlePrintInvoice}
-              aria-label="Print invoice"
+              aria-label={t('history.aria_print')}
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 active:bg-gray-200"
             >
               <Printer className="h-5 w-5 text-gray-700" />
@@ -39,7 +50,7 @@ export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={t('history.aria_close')}
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 active:bg-gray-200"
             >
               <X className="h-5 w-5 text-gray-700" />
@@ -49,9 +60,9 @@ export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
 
         <div className="space-y-4 text-gray-900 print:text-black">
           <div className="border-b border-gray-200 pb-3 print:border-gray-400">
-            <div className="text-sm text-gray-600 print:text-gray-700">Date</div>
+            <div className="text-sm text-gray-600 print:text-gray-700">{t('history.date')}</div>
             <div className="font-medium">
-              {new Date(transaction.timestamp).toLocaleString('en-IN', {
+              {new Date(transaction.timestamp).toLocaleString(dateLocale, {
                 dateStyle: 'medium',
                 timeStyle: 'short',
               })}
@@ -59,7 +70,7 @@ export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
           </div>
 
           <div>
-            <div className="mb-3 text-sm font-medium">Items</div>
+            <div className="mb-3 text-sm font-medium">{t('history.items')}</div>
             <div className="space-y-2">
               {transaction.items.map((item, index) => (
                 <div
@@ -83,7 +94,7 @@ export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
 
           <div className="border-t-2 border-gray-900 pt-3 print:border-black">
             <div className="flex items-center justify-between">
-              <div className="text-lg font-bold">Total</div>
+              <div className="text-lg font-bold">{t('common.total')}</div>
               <div className="text-2xl font-bold text-green-600 print:text-black">
                 ₹{transaction.total.toFixed(2)}
               </div>
@@ -91,8 +102,8 @@ export function InvoiceModal({ transaction, onClose }: InvoiceModalProps) {
           </div>
 
           <div className="rounded-lg bg-gray-50 p-3 print:border print:border-gray-300 print:bg-white">
-            <div className="text-sm text-gray-600 print:text-gray-700">Payment Method</div>
-            <div className="font-medium uppercase">{transaction.paymentMethod}</div>
+            <div className="text-sm text-gray-600 print:text-gray-700">{t('history.payment_method')}</div>
+            <div className="font-medium uppercase">{paymentLabel(transaction.paymentMethod, t)}</div>
           </div>
         </div>
       </div>

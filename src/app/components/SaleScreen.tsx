@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore, Product } from '../store';
 import { Search, Plus, Minus, Trash2, Banknote, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,6 +14,7 @@ interface SaleScreenProps {
 }
 
 export function SaleScreen({ onComplete }: SaleScreenProps) {
+  const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
@@ -22,15 +24,18 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
   const removeFromCart = useStore((state) => state.removeFromCart);
   const completeSale = useStore((state) => state.completeSale);
 
-  const getStockStatus = (product: Product) => {
-    if (product.stock === 0) {
-      return { text: 'Out of stock', color: 'text-red-600', dot: '🔴' };
-    }
-    if (product.stock < 10) {
-      return { text: 'Low stock', color: 'text-orange-500', dot: '🟡' };
-    }
-    return { text: 'In stock', color: 'text-green-600', dot: '🟢' };
-  };
+  const getStockStatus = useCallback(
+    (product: Product) => {
+      if (product.stock === 0) {
+        return { text: t('sales.out_of_stock'), color: 'text-red-600', dot: '🔴' };
+      }
+      if (product.stock < 10) {
+        return { text: t('sales.low_stock'), color: 'text-orange-500', dot: '🟡' };
+      }
+      return { text: t('sales.in_stock'), color: 'text-green-600', dot: '🟢' };
+    },
+    [t],
+  );
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) =>
@@ -58,11 +63,11 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
 
   const handleCompleteSale = (paymentMethod: 'cash' | 'upi') => {
     if (cart.length === 0) {
-      toast.error('Add items to cart first');
+      toast.error(t('sales.toast_cart_empty'));
       return;
     }
     completeSale(paymentMethod);
-    toast.success('Sale completed successfully!');
+    toast.success(t('sales.toast_sale_complete'));
     onComplete();
   };
 
@@ -80,19 +85,19 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
         useStore.setState({ cart: tempCart });
       }
       setSelectedProduct(null);
-      toast.success('Added to cart');
+      toast.success(t('sales.toast_added_cart'));
     }
   };
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-gray-50 pb-16">
       <div className="shrink-0 p-4 bg-white border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900 mb-3">New Sale</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-3">{t('sales.new_sale')}</h1>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder={t('sales.search_products')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -105,14 +110,14 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
         <div className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4">
           {visibleProducts.length === 0 ? (
             <div className="text-center text-gray-500 mt-12">
-              <p>No products found</p>
+              <p>{t('sales.no_products_found')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {visibleProducts.map((product) => {
                 const status = getStockStatus(product);
                 const isOutOfStock = product.stock === 0;
-                const unitLabel = product.priceUnit || product.unit || 'item';
+                const unitLabel = product.priceUnit || product.unit || t('sales.unit_item');
 
                 return (
                   <button
@@ -206,7 +211,7 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
 
           <div className="border-t border-gray-200 p-4 space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">Total</span>
+              <span className="text-lg font-semibold text-gray-900">{t('common.total')}</span>
               <span className="text-2xl font-bold text-green-600">
                 ₹{cartTotal.toFixed(2)}
               </span>
@@ -218,14 +223,14 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
                 className="bg-green-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-green-700 transition-colors"
               >
                 <Banknote className="w-5 h-5" />
-                Cash
+                {t('sales.cash')}
               </button>
               <button
                 onClick={() => handleCompleteSale('upi')}
                 className="bg-blue-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
               >
                 <Smartphone className="w-5 h-5" />
-                UPI
+                {t('sales.upi')}
               </button>
             </div>
           </div>

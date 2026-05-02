@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   ChevronRight,
   Crown,
   KeyRound,
+  Languages,
   LogOut,
   Store,
   UserRound,
   X,
 } from 'lucide-react';
 import { ChangePasswordScreen } from './ChangePasswordScreen';
+import { changeAppLanguage } from '../../i18n.js';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -58,6 +61,7 @@ interface PlaceholderModalProps {
  * Renders a mobile-first settings screen for profile, shop, subscription, and logout actions.
  */
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
+  const { t, i18n } = useTranslation();
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [activePlaceholder, setActivePlaceholder] = useState<'' | 'profile' | 'shop' | 'plan'>('');
@@ -87,18 +91,21 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   const placeholderContentMap = {
     profile: {
-      title: 'Edit Profile',
-      description: 'Profile editing UI placeholder. Connect this to your edit profile flow.',
+      titleKey: 'settings.placeholder_profile_title',
+      descriptionKey: 'settings.placeholder_profile_desc',
     },
     shop: {
-      title: 'Shop Info',
-      description: 'Shop details UI placeholder. Add your shop configuration form here.',
+      titleKey: 'settings.placeholder_shop_title',
+      descriptionKey: 'settings.placeholder_shop_desc',
     },
     plan: {
-      title: 'View Plans / Upgrade',
-      description: 'Plan selection UI placeholder. Add your plans list and upgrade flow here.',
+      titleKey: 'settings.placeholder_plan_title',
+      descriptionKey: 'settings.placeholder_plan_desc',
     },
   } as const;
+
+  const isEnglishActive = i18n.language === 'en' || i18n.language.startsWith('en');
+  const isTamilActive = i18n.language === 'ta' || i18n.language.startsWith('ta');
 
   return (
     <div className="flex h-full flex-col bg-gray-50 pb-20">
@@ -108,18 +115,54 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             <button
               type="button"
               onClick={onBack}
-              aria-label="Go back"
+              aria-label={t('common.go_back')}
               className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700 active:bg-gray-200"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           ) : null}
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('settings.title')}</h1>
         </div>
       </header>
 
       <main className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
+          <SettingsCard>
+            <div className="flex items-start gap-3 rounded-xl p-1">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-600">
+                <Languages className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-semibold text-gray-900">{t('settings.language')}</p>
+                <p className="text-sm text-gray-500">{t('settings.language_hint')}</p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => changeAppLanguage('en')}
+                    className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold ${
+                      isEnglishActive
+                        ? 'border-green-600 bg-green-50 text-green-800'
+                        : 'border-gray-200 bg-white text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    {t('settings.language_english')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => changeAppLanguage('ta')}
+                    className={`flex-1 rounded-xl border py-2.5 text-sm font-semibold ${
+                      isTamilActive
+                        ? 'border-green-600 bg-green-50 text-green-800'
+                        : 'border-gray-200 bg-white text-gray-700 active:bg-gray-50'
+                    }`}
+                  >
+                    {t('settings.language_tamil')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </SettingsCard>
+
           <SettingsCard>
             {isProfileLoading ? (
               <ProfileSkeleton />
@@ -142,7 +185,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <SettingsCard>
             <SettingsItem
               icon={Store}
-              title="Shop Info"
+              title={t('settings.shop_info')}
               subtitle="My Fresh Mart"
               onClick={() => handleOpenPlaceholder('shop')}
             />
@@ -151,9 +194,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <SettingsCard>
             <SettingsItem
               icon={Crown}
-              title="Pro Plan"
-              subtitle="View Plans / Upgrade"
-              badge={<Badge label="Active" variant="success" />}
+              title={t('settings.pro_plan')}
+              subtitle={t('settings.view_plans')}
+              badge={<Badge label={t('settings.badge_active')} variant="success" />}
               onClick={() => handleOpenPlaceholder('plan')}
             />
           </SettingsCard>
@@ -161,8 +204,8 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <SettingsCard>
             <SettingsItem
               icon={KeyRound}
-              title="Change Password"
-              subtitle="Update your login password"
+              title={t('settings.change_password')}
+              subtitle={t('settings.change_password_sub')}
               onClick={() => setIsChangePasswordOpen(true)}
             />
           </SettingsCard>
@@ -170,7 +213,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           <SettingsCard>
             <SettingsItem
               icon={LogOut}
-              title="Logout"
+              title={t('settings.logout')}
               textColorClassName="text-red-500"
               onClick={() => setIsLogoutModalOpen(true)}
             />
@@ -180,18 +223,18 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
       <ConfirmationModal
         isOpen={isLogoutModalOpen}
-        title="Are you sure you want to logout?"
-        description="You will need to login again to access your POS account."
-        confirmLabel="Confirm Logout"
-        cancelLabel="Cancel"
+        title={t('settings.logout_title')}
+        description={t('settings.logout_desc')}
+        confirmLabel={t('settings.confirm_logout')}
+        cancelLabel={t('common.cancel')}
         onConfirm={() => setIsLogoutModalOpen(false)}
         onCancel={() => setIsLogoutModalOpen(false)}
       />
 
       <PlaceholderModal
         isOpen={activePlaceholder !== ''}
-        title={activePlaceholder ? placeholderContentMap[activePlaceholder].title : ''}
-        description={activePlaceholder ? placeholderContentMap[activePlaceholder].description : ''}
+        title={activePlaceholder ? t(placeholderContentMap[activePlaceholder].titleKey) : ''}
+        description={activePlaceholder ? t(placeholderContentMap[activePlaceholder].descriptionKey) : ''}
         onClose={handleClosePlaceholder}
       />
     </div>
@@ -311,6 +354,7 @@ export function ConfirmationModal({
  * Reusable placeholder modal for upcoming settings pages.
  */
 function PlaceholderModal({ isOpen, title, description, onClose }: PlaceholderModalProps) {
+  const { t } = useTranslation();
   if (!isOpen) {
     return null;
   }
@@ -323,7 +367,7 @@ function PlaceholderModal({ isOpen, title, description, onClose }: PlaceholderMo
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close modal"
+            aria-label={t('common.close_modal')}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 active:bg-gray-200"
           >
             <X className="h-4 w-4" />

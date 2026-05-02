@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface LiquidQuantityInputProps {
   onConfirm: (litres: number) => void;
@@ -13,15 +14,20 @@ export function LiquidQuantityInput({
   productName,
   pricePerLitre,
 }: LiquidQuantityInputProps) {
+  const { t } = useTranslation();
   const [litres, setLitres] = useState('0');
   const [ml, setMl] = useState('');
 
-  const predefinedOptions = [
-    { label: '250 ml', litres: 0.25 },
-    { label: '500 ml', litres: 0.5 },
-    { label: '1 L', litres: 1 },
-    { label: '2 L', litres: 2 },
-  ];
+  const predefinedOptions = useMemo(
+    () =>
+      [
+        { labelKey: 'sales.preset_250_ml', litres: 0.25 },
+        { labelKey: 'sales.preset_500_ml', litres: 0.5 },
+        { labelKey: 'sales.preset_1_l', litres: 1 },
+        { labelKey: 'sales.preset_2_l', litres: 2 },
+      ] as const,
+    [],
+  );
 
   const getTotalLitres = (): number => {
     const l = parseInt(litres) || 0;
@@ -89,7 +95,7 @@ export function LiquidQuantityInput({
         <div className="flex justify-between items-start mb-6">
           <div className="flex-1">
             <h2 className="text-xl font-bold text-gray-900">{productName}</h2>
-            <p className="text-sm text-gray-600 mt-1">₹{pricePerLitre}/L</p>
+            <p className="text-sm text-gray-600 mt-1">{t('sales.per_litre_short', { price: pricePerLitre })}</p>
           </div>
           <button
             onClick={onClose}
@@ -102,12 +108,12 @@ export function LiquidQuantityInput({
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Quick Select
+              {t('sales.quick_select')}
             </label>
             <div className="grid grid-cols-4 gap-2">
               {predefinedOptions.map((option) => (
                 <button
-                  key={option.label}
+                  key={option.labelKey}
                   onClick={() => handlePredefinedClick(option.litres)}
                   className={`py-3 rounded-xl font-semibold text-sm transition-colors ${
                     getTotalLitres() === option.litres
@@ -115,7 +121,7 @@ export function LiquidQuantityInput({
                       : 'bg-gray-100 text-gray-700 active:bg-gray-200'
                   }`}
                 >
-                  {option.label}
+                  {t(option.labelKey)}
                 </button>
               ))}
             </div>
@@ -123,11 +129,11 @@ export function LiquidQuantityInput({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Manual Input
+              {t('sales.manual_input')}
             </label>
             <div className="flex items-center gap-3">
               <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">Litres</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('sales.litres')}</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -138,7 +144,7 @@ export function LiquidQuantityInput({
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-xs text-gray-500 mb-1">ml (0-999)</label>
+                <label className="block text-xs text-gray-500 mb-1">{t('sales.ml_range')}</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -155,7 +161,7 @@ export function LiquidQuantityInput({
           </div>
 
           <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-            <div className="text-sm text-gray-600 mb-1">Total Price</div>
+            <div className="text-sm text-gray-600 mb-1">{t('sales.total_price')}</div>
             <div className="text-3xl font-bold text-green-600">₹{total.toFixed(2)}</div>
           </div>
 
@@ -164,7 +170,7 @@ export function LiquidQuantityInput({
             disabled={getTotalLitres() <= 0}
             className="w-full bg-green-600 text-white rounded-xl py-4 font-semibold text-lg active:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            Add to Cart
+            {t('common.add_to_cart')}
           </button>
         </div>
       </div>

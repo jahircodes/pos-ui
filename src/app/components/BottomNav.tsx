@@ -1,4 +1,5 @@
 import { Building2, Home, ShoppingCart, Package, History, Settings } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface BottomNavProps {
   activeTab: 'home' | 'sale' | 'products' | 'history' | 'business' | 'settings';
@@ -6,13 +7,15 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+  const { t } = useTranslation();
+
   const tabs = [
-    { id: 'home' as const, icon: Home, label: 'Home' },
-    { id: 'sale' as const, icon: ShoppingCart, label: 'Sale' },
-    { id: 'products' as const, icon: Package, label: 'Products' },
-    { id: 'history' as const, icon: History, label: 'History' },
-    { id: 'business' as const, icon: Building2, label: 'Business' },
-    { id: 'settings' as const, icon: Settings, label: 'Settings' },
+    { id: 'home' as const, icon: Home, labelKey: 'nav.home' },
+    { id: 'sale' as const, icon: ShoppingCart, labelKey: 'nav.sale' },
+    { id: 'products' as const, icon: Package, labelKey: 'nav.products' },
+    { id: 'history' as const, icon: History, labelKey: 'nav.history' },
+    { id: 'business' as const, icon: Building2, labelKey: 'nav.business' },
+    { id: 'settings' as const, icon: Settings, labelKey: 'nav.settings' },
   ];
 
   return (
@@ -30,7 +33,7 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
               }`}
             >
               <Icon className="w-6 h-6" />
-              <span className="text-xs font-medium">{tab.label}</span>
+              <span className="text-xs font-medium">{t(tab.labelKey)}</span>
             </button>
           );
         })}

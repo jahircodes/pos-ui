@@ -1,6 +1,7 @@
 /**
  * Mobile-first footer: shows visible range and a Load more control for long lists.
  */
+import { useTranslation } from 'react-i18next';
 
 export const LOAD_MORE_CHUNK = 25;
 
@@ -16,6 +17,8 @@ export function ListLoadMoreFooter({
   visibleCount,
   onLoadMore,
 }: ListLoadMoreFooterProps) {
+  const { t } = useTranslation();
+
   if (totalCount === 0) {
     return null;
   }
@@ -26,7 +29,7 @@ export function ListLoadMoreFooter({
   return (
     <div className="shrink-0 border-t border-gray-200 bg-white px-3 py-3">
       <p className="mb-2 text-center text-xs tabular-nums text-gray-500">
-        Showing 1–{showingEnd} of {totalCount}
+        {t('sales.showing_range', { end: showingEnd, total: totalCount })}
       </p>
       {hasMore ? (
         <button
@@ -34,10 +37,10 @@ export function ListLoadMoreFooter({
           onClick={onLoadMore}
           className="w-full rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-800 active:bg-gray-50"
         >
-          Load more
+          {t('sales.load_more')}
         </button>
       ) : (
-        <p className="text-center text-xs text-gray-400">All items loaded</p>
+        <p className="text-center text-xs text-gray-400">{t('sales.all_items_loaded')}</p>
       )}
     </div>
   );

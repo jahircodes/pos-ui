@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore, Product } from '../store';
 import { Plus, Edit, Trash2, Search, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import { applyInventoryRows, parseInventoryCsv } from '../utils/inventoryCsv';
 type StockFilterTab = 'all' | 'low' | 'out';
 
 export function ProductsScreen() {
+  const { t } = useTranslation();
   const products = useStore((state) => state.products);
   const deleteProduct = useStore((state) => state.deleteProduct);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -77,19 +79,22 @@ export function ProductsScreen() {
   const handleConfirmDelete = () => {
     if (!productPendingDelete) return;
     deleteProduct(productPendingDelete.id);
-    toast.success('Product deleted');
+    toast.success(t('inventory.toast_deleted'));
     setProductPendingDelete(null);
   };
 
-  const getStockStatus = (product: Product) => {
-    if (product.stock === 0) {
-      return { text: 'Out of stock', color: 'text-red-600', dot: '🔴' };
-    }
-    if (product.stock < 10) {
-      return { text: 'Low stock', color: 'text-orange-500', dot: '🟡' };
-    }
-    return { text: 'In stock', color: 'text-green-600', dot: '🟢' };
-  };
+  const getStockStatus = useCallback(
+    (product: Product) => {
+      if (product.stock === 0) {
+        return { text: t('inventory.out_of_stock_status'), color: 'text-red-600', dot: '🔴' };
+      }
+      if (product.stock < 10) {
+        return { text: t('inventory.low_stock_status'), color: 'text-orange-500', dot: '🟡' };
+      }
+      return { text: t('inventory.in_stock_status'), color: 'text-green-600', dot: '🟢' };
+    },
+    [t],
+  );
 
   const handleInventoryUploadClick = () => {
     inventoryFileInputRef.current?.click();
@@ -112,7 +117,7 @@ export function ProductsScreen() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(downloadUrl);
-    toast.success('Template downloaded');
+    toast.success(t('inventory.toast_template_downloaded'));
   };
 
   const handleInventoryFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,32 +130,57 @@ export function ProductsScreen() {
       const text = typeof reader.result === 'string' ? reader.result : '';
       const { rows, errors } = parseInventoryCsv(text);
       if (rows.length === 0) {
-        toast.error(errors[0] ?? 'No valid rows to import');
+        toast.error(errors[0] ?? t('inventory.toast_no_valid_rows'));
         return;
       }
       const { added, updated } = applyInventoryRows(rows);
       if (errors.length > 0) {
-        toast.success(`Inventory updated: ${added} added, ${updated} updated`, {
-          description: `${errors.length} line(s) skipped. ${errors.slice(0, 3).join(' · ')}`,
+        toast.success(t('inventory.toast_inventory_updated', { added, updated }), {
+          description: `${t('inventory.toast_lines_skipped', { count: errors.length })} ${errors.slice(0, 3).join(' · ')}`,
         });
       } else {
-        toast.success(`Inventory updated: ${added} added, ${updated} updated`);
+        toast.success(t('inventory.toast_inventory_updated', { added, updated }));
       }
     };
-    reader.onerror = () => toast.error('Could not read file');
+    reader.onerror = () => toast.error(t('inventory.toast_read_file_error'));
     reader.readAsText(file, 'UTF-8');
   };
+
+  const stockChips = useMemo(
+    () =>
+      [
+        {
+          id: 'all' as const,
+          label: t('inventory.all'),
+          count: products.length,
+          activeClass: 'border-green-300 bg-green-50 text-green-800',
+        },
+        {
+          id: 'low' as const,
+          label: t('inventory.low_stock'),
+          count: stockFilterCounts.lowStockCount,
+          activeClass: 'border-orange-300 bg-orange-100 text-orange-800',
+        },
+        {
+          id: 'out' as const,
+          label: t('inventory.out_of_stock'),
+          count: stockFilterCounts.outOfStockCount,
+          activeClass: 'border-red-200 bg-red-50 text-red-800',
+        },
+      ] as const,
+    [t, products.length, stockFilterCounts.lowStockCount, stockFilterCounts.outOfStockCount],
+  );
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-gray-50 pb-16">
       <div className="shrink-0 p-4 bg-white border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900 mb-3">Products</h1>
+        <h1 className="text-xl font-bold text-gray-900 mb-3">{t('inventory.title')}</h1>
         <div className="flex items-stretch gap-2">
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder={t('inventory.search_products')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -166,7 +196,7 @@ export function ProductsScreen() {
           <button
             type="button"
             onClick={handleDownloadTemplate}
-            aria-label="Download inventory template"
+            aria-label={t('inventory.aria_download_template')}
             className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-blue-700 active:bg-gray-100"
           >
             <Download className="h-5 w-5" />
@@ -174,36 +204,15 @@ export function ProductsScreen() {
           <button
             type="button"
             onClick={handleInventoryUploadClick}
-            aria-label="Upload inventory CSV"
+            aria-label={t('inventory.aria_upload_csv')}
             className="shrink-0 flex h-12 w-12 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-green-700 active:bg-gray-100"
           >
             <Upload className="h-5 w-5" />
           </button>
         </div>
-        <div className="mt-2" role="group" aria-label="Filter products by stock">
+        <div className="mt-2" role="group" aria-label={t('inventory.filter_stock_aria')}>
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
-            {(
-              [
-                {
-                  id: 'all' as const,
-                  label: 'All',
-                  count: products.length,
-                  activeClass: 'border-green-300 bg-green-50 text-green-800',
-                },
-                {
-                  id: 'low' as const,
-                  label: 'Low stock',
-                  count: stockFilterCounts.lowStockCount,
-                  activeClass: 'border-orange-300 bg-orange-100 text-orange-800',
-                },
-                {
-                  id: 'out' as const,
-                  label: 'Out of stock',
-                  count: stockFilterCounts.outOfStockCount,
-                  activeClass: 'border-red-200 bg-red-50 text-red-800',
-                },
-              ] as const
-            ).map((chip) => {
+            {stockChips.map((chip) => {
               const isSelected = stockFilterTab === chip.id;
               const inactiveClass = 'border-gray-200 bg-white text-gray-600 active:bg-gray-50';
 
@@ -230,10 +239,10 @@ export function ProductsScreen() {
             })}
           </div>
           {stockFilterTab === 'low' ? (
-            <p className="mt-1.5 text-xs text-gray-500">Stock below 10, excluding out of stock.</p>
+            <p className="mt-1.5 text-xs text-gray-500">{t('inventory.hint_low_tab')}</p>
           ) : null}
           {stockFilterTab === 'out' ? (
-            <p className="mt-1.5 text-xs text-gray-500">Items with zero stock.</p>
+            <p className="mt-1.5 text-xs text-gray-500">{t('inventory.hint_out_tab')}</p>
           ) : null}
         </div>
       </div>
@@ -244,10 +253,10 @@ export function ProductsScreen() {
             <div className="text-center text-gray-500 mt-12">
               <p>
                 {stockFilterTab === 'all'
-                  ? 'No products found'
+                  ? t('inventory.empty_all')
                   : stockFilterTab === 'low'
-                    ? 'No low-stock products'
-                    : 'No out-of-stock products'}
+                    ? t('inventory.empty_low')
+                    : t('inventory.empty_out')}
               </p>
             </div>
           ) : (
@@ -269,7 +278,7 @@ export function ProductsScreen() {
                         ₹{product.price} / {product.priceUnit || product.unit}
                       </div>
                       <div className="text-sm text-gray-700 mt-1">
-                        Stock: {stockDisplay}
+                        {t('inventory.stock_label', { value: stockDisplay })}
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -320,10 +329,9 @@ export function ProductsScreen() {
       {productPendingDelete && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center">
           <div className="w-full rounded-t-3xl bg-white p-4 shadow-xl sm:max-w-sm sm:rounded-2xl">
-            <h2 className="text-lg font-bold text-gray-900">Delete Product</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('inventory.delete_title')}</h2>
             <p className="mt-2 text-sm text-gray-600">
-              Are you sure you want to delete{' '}
-              <span className="font-semibold text-gray-900">{productPendingDelete.name}</span>?
+              {t('inventory.delete_confirm', { name: productPendingDelete.name })}
             </p>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <button
@@ -331,14 +339,14 @@ export function ProductsScreen() {
                 onClick={() => setProductPendingDelete(null)}
                 className="rounded-xl border border-gray-200 py-3 font-semibold text-gray-700 active:bg-gray-50"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDelete}
                 className="rounded-xl bg-red-500 py-3 font-semibold text-white active:bg-red-600"
               >
-                Delete
+                {t('common.delete')}
               </button>
             </div>
           </div>

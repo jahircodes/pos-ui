@@ -2,10 +2,12 @@
  * Sales history with Today / This week / This month / Custom filters, export (UI-only), and invoice detail.
  */
 import { useState, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore, Transaction } from '../store';
 import { Download, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { InvoiceModal } from './InvoiceModal';
+import { getAppLocale } from '../../i18n.js';
 
 type HistoryFilter = 'today' | 'week' | 'month' | 'custom';
 
@@ -45,15 +47,16 @@ function rollingWeekStart(): Date {
   return d;
 }
 
-const FILTER_CHIPS: { id: HistoryFilter; label: string }[] = [
-  { id: 'today', label: 'Today' },
-  { id: 'week', label: 'This week' },
-  { id: 'month', label: 'This month' },
-  { id: 'custom', label: 'Custom' },
-];
+function paymentLabel(method: string, t: (key: string) => string) {
+  if (method === 'cash') return t('sales.payment_cash');
+  if (method === 'upi') return t('sales.payment_upi');
+  return method;
+}
 
 export function HistoryScreen() {
+  const { t, i18n } = useTranslation();
   const transactions = useStore((state) => state.transactions);
+  const dateLocale = getAppLocale();
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(
     null,
   );
@@ -64,6 +67,17 @@ export function HistoryScreen() {
   const [isCustomSheetOpen, setIsCustomSheetOpen] = useState(false);
   const [isExportSheetOpen, setIsExportSheetOpen] = useState(false);
 
+  const filterChips = useMemo(
+    () =>
+      [
+        { id: 'today' as const, label: t('history.filter_today') },
+        { id: 'week' as const, label: t('history.filter_week') },
+        { id: 'month' as const, label: t('history.filter_month') },
+        { id: 'custom' as const, label: t('history.filter_custom') },
+      ],
+    [t, i18n.language],
+  );
+
   useEffect(() => {
     if (filter !== 'custom') {
       setIsCustomSheetOpen(false);
@@ -73,25 +87,25 @@ export function HistoryScreen() {
   const filterSummaryLabel = useMemo(() => {
     switch (filter) {
       case 'today':
-        return 'Today';
+        return t('history.summary_today');
       case 'week':
-        return 'This week (last 7 days)';
+        return t('history.summary_week');
       case 'month':
-        return 'This month';
+        return t('history.summary_month');
       case 'custom':
         if (customRange) {
           const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-          return `${customRange.from.toLocaleDateString('en-IN', opts)} – ${customRange.to.toLocaleDateString('en-IN', opts)}`;
+          return `${customRange.from.toLocaleDateString(dateLocale, opts)} – ${customRange.to.toLocaleDateString(dateLocale, opts)}`;
         }
-        return 'Custom (set dates)';
+        return t('history.summary_custom_pending');
       default:
         return '';
     }
-  }, [filter, customRange]);
+  }, [filter, customRange, t, dateLocale]);
 
   const filteredTransactions = useMemo(() => {
-    const list = transactions.filter((t) => {
-      const transactionDate = new Date(t.timestamp);
+    const list = transactions.filter((txn) => {
+      const transactionDate = new Date(txn.timestamp);
       switch (filter) {
         case 'today':
           return transactionDate >= startOfToday();
@@ -121,9 +135,9 @@ export function HistoryScreen() {
         setCustomDraftFrom(toDateInputValue(customRange.from));
         setCustomDraftTo(toDateInputValue(customRange.to));
       } else {
-        const t = new Date();
-        setCustomDraftFrom(toDateInputValue(t));
-        setCustomDraftTo(toDateInputValue(t));
+        const now = new Date();
+        setCustomDraftFrom(toDateInputValue(now));
+        setCustomDraftTo(toDateInputValue(now));
       }
       setIsCustomSheetOpen(true);
     }
@@ -133,17 +147,17 @@ export function HistoryScreen() {
     const from = parseDateInputLocal(customDraftFrom);
     const to = parseDateInputLocal(customDraftTo);
     if (from.getTime() > to.getTime()) {
-      toast.error('From date must be before or equal to To date');
+      toast.error(t('history.toast_date_order'));
       return;
     }
     setCustomRange({ from, to });
     setIsCustomSheetOpen(false);
-    toast.success('Date range applied');
+    toast.success(t('history.toast_range_applied'));
   };
 
   const handleExportDownloadClick = () => {
-    toast.message('Download coming soon', {
-      description: 'CSV export will be available in a future update.',
+    toast.message(t('history.export_coming_title'), {
+      description: t('history.export_coming_desc'),
     });
     setIsExportSheetOpen(false);
   };
@@ -152,11 +166,11 @@ export function HistoryScreen() {
     <div className="flex flex-col h-full min-h-0 bg-gray-50 pb-16">
       <div className="shrink-0 border-b border-gray-200 bg-white p-4">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <h1 className="text-xl font-bold text-gray-900">Sales History</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t('history.title')}</h1>
           <button
             type="button"
             onClick={() => setIsExportSheetOpen(true)}
-            aria-label="Export report"
+            aria-label={t('history.aria_export')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-green-700 active:bg-gray-100"
           >
             <Download className="h-5 w-5" />
@@ -164,7 +178,7 @@ export function HistoryScreen() {
         </div>
 
         <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {FILTER_CHIPS.map((chip) => (
+          {filterChips.map((chip) => (
             <button
               key={chip.id}
               type="button"
@@ -184,21 +198,21 @@ export function HistoryScreen() {
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
         {filter === 'custom' && !customRange ? (
           <div className="mt-10 rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center">
-            <p className="font-medium text-gray-700">Choose a date range</p>
+            <p className="font-medium text-gray-700">{t('history.choose_range_title')}</p>
             <p className="mt-1 text-sm text-gray-500">
-              Tap Custom again or set dates to see sales in that period.
+              {t('history.choose_range_hint')}
             </p>
             <button
               type="button"
               onClick={() => setIsCustomSheetOpen(true)}
               className="mt-4 w-full rounded-xl bg-green-600 py-3 font-semibold text-white active:bg-green-700"
             >
-              Set dates
+              {t('history.set_dates')}
             </button>
           </div>
         ) : filteredTransactions.length === 0 ? (
           <div className="mt-12 text-center text-gray-500">
-            <p>No transactions found</p>
+            <p>{t('history.no_transactions')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -214,17 +228,17 @@ export function HistoryScreen() {
                     ₹{transaction.total.toFixed(2)}
                   </div>
                   <div className="rounded bg-gray-100 px-2 py-1 text-xs font-medium uppercase text-gray-600">
-                    {transaction.paymentMethod}
+                    {paymentLabel(transaction.paymentMethod, t)}
                   </div>
                 </div>
                 <div className="text-sm text-gray-600">
-                  {new Date(transaction.timestamp).toLocaleString('en-IN', {
+                  {new Date(transaction.timestamp).toLocaleString(dateLocale, {
                     dateStyle: 'medium',
                     timeStyle: 'short',
                   })}
                 </div>
                 <div className="mt-1 text-xs text-gray-500">
-                  {transaction.items.length} item(s)
+                  {t('history.item_count', { count: transaction.items.length })}
                 </div>
               </button>
             ))}
@@ -236,12 +250,12 @@ export function HistoryScreen() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
           <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 sm:max-w-md sm:rounded-2xl">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">Custom range</h2>
+              <h2 className="text-lg font-bold text-gray-900">{t('history.custom_range_title')}</h2>
               <button
                 type="button"
                 onClick={() => setIsCustomSheetOpen(false)}
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 active:bg-gray-200"
-                aria-label="Close"
+                aria-label={t('history.aria_close')}
               >
                 <X className="h-5 w-5 text-gray-700" />
               </button>
@@ -250,7 +264,7 @@ export function HistoryScreen() {
             <div className="space-y-4">
               <div>
                 <label htmlFor="history-from" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  From
+                  {t('common.from')}
                 </label>
                 <input
                   id="history-from"
@@ -262,7 +276,7 @@ export function HistoryScreen() {
               </div>
               <div>
                 <label htmlFor="history-to" className="mb-1.5 block text-sm font-medium text-gray-700">
-                  To
+                  {t('common.to')}
                 </label>
                 <input
                   id="history-to"
@@ -280,14 +294,14 @@ export function HistoryScreen() {
                 onClick={() => setIsCustomSheetOpen(false)}
                 className="flex-1 rounded-xl border border-gray-200 py-3 font-semibold text-gray-800 active:bg-gray-50"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={handleApplyCustomRange}
                 className="flex-1 rounded-xl bg-green-600 py-3 font-semibold text-white active:bg-green-700"
               >
-                Apply
+                {t('common.apply')}
               </button>
             </div>
           </div>
@@ -298,23 +312,23 @@ export function HistoryScreen() {
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center">
           <div className="max-h-[85vh] w-full overflow-y-auto rounded-t-3xl bg-white p-6 sm:max-w-md sm:rounded-2xl">
             <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">Export report</h2>
+              <h2 className="text-lg font-bold text-gray-900">{t('history.export_title')}</h2>
               <button
                 type="button"
                 onClick={() => setIsExportSheetOpen(false)}
                 className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 active:bg-gray-200"
-                aria-label="Close"
+                aria-label={t('history.aria_close')}
               >
                 <X className="h-5 w-5 text-gray-700" />
               </button>
             </div>
 
             <p className="mb-4 text-sm text-gray-600">
-              <span className="font-medium text-gray-800">Scope:</span> {filterSummaryLabel}
+              <span className="font-medium text-gray-800">{t('common.scope')}:</span> {filterSummaryLabel}
             </p>
 
             <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-              <div className="mb-2 text-sm font-medium text-gray-900">Format</div>
+              <div className="mb-2 text-sm font-medium text-gray-900">{t('common.format')}</div>
               <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-white p-3">
                 <span
                   className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-green-600 bg-green-600"
@@ -332,14 +346,14 @@ export function HistoryScreen() {
                 onClick={() => setIsExportSheetOpen(false)}
                 className="flex-1 rounded-xl border border-gray-200 py-3 font-semibold text-gray-800 active:bg-gray-50"
               >
-                Close
+                {t('common.close')}
               </button>
               <button
                 type="button"
                 onClick={handleExportDownloadClick}
                 className="flex-1 rounded-xl bg-green-600 py-3 font-semibold text-white active:bg-green-700"
               >
-                Download
+                {t('common.download')}
               </button>
             </div>
           </div>

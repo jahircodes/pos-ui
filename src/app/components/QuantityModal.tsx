@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Product } from '../store';
 import { X, Plus, Minus } from 'lucide-react';
 import { formatWeight, formatLitres } from '../utils/formatWeight';
@@ -10,6 +11,7 @@ interface QuantityModalProps {
 }
 
 export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProps) {
+  const { t } = useTranslation();
   const isDecimalBased = product.unit === 'kg' || product.unit === 'litre';
   const [internalValue, setInternalValue] = useState<number>(isDecimalBased ? 0.5 : 1);
 
@@ -34,26 +36,21 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
       return isNaN(num) ? null : num;
     }
 
-    // For kg: parse "250 g", "1 kg", "1 kg 250 g"
-    // For litre: parse "250 ml", "1 L", "1 L 250 ml"
     const unitLarge = product.unit === 'kg' ? 'kg' : 'L';
     const unitSmall = product.unit === 'kg' ? 'g' : 'ml';
 
     let total = 0;
 
-    // Check for large unit (kg or L)
     const largeMatch = text.match(new RegExp(`(\\d+)\\s*${unitLarge}`, 'i'));
     if (largeMatch) {
       total += parseFloat(largeMatch[1]);
     }
 
-    // Check for small unit (g or ml)
     const smallMatch = text.match(new RegExp(`(\\d+)\\s*${unitSmall}`, 'i'));
     if (smallMatch) {
       total += parseFloat(smallMatch[1]) / 1000;
     }
 
-    // If no units found, try parsing as plain number
     if (total === 0) {
       const num = parseFloat(text);
       if (!isNaN(num)) {
@@ -94,6 +91,13 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
   const total = internalValue * product.price;
   const displayValue = formatForDisplay(internalValue);
 
+  const hintKey =
+    product.unit === 'kg'
+      ? t('sales.quantity_hint_kg')
+      : product.unit === 'litre'
+        ? t('sales.quantity_hint_litre')
+        : t('sales.quantity_hint_piece');
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end sm:items-center justify-center z-50">
       <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 animate-slide-up">
@@ -101,7 +105,7 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
           <div className="flex-1">
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <p className="text-sm text-gray-600 mt-1">
-              ₹{product.price}/{product.priceUnit || product.unit || 'item'}
+              ₹{product.price}/{product.priceUnit || product.unit || t('sales.unit_item')}
             </p>
           </div>
           <button
@@ -115,7 +119,7 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
-              Select Quantity
+              {t('sales.quantity_modal_title')}
             </label>
             <div className="grid grid-cols-4 gap-2 mb-4">
               {quickSelects.map((value) => (
@@ -153,20 +157,17 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
                 onClick={handleIncrement}
                 className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
               >
-                <Plus className="w-6 h-6" />
+                <Plus className="w-6 w-6" />
               </button>
             </div>
 
             <p className="text-xs text-gray-500 mt-2 text-center">
-              {isDecimalBased
-                ? `You can type ${product.unit === 'kg' ? '"250 g" or "1 kg"' : '"250 ml" or "1 L"'}`
-                : 'Enter quantity'
-              }
+              {isDecimalBased ? t('sales.quantity_hint_decimal', { hint: hintKey }) : hintKey}
             </p>
           </div>
 
           <div className="bg-green-50 rounded-xl p-4 border border-green-100">
-            <div className="text-sm text-gray-600 mb-1">Total Price</div>
+            <div className="text-sm text-gray-600 mb-1">{t('sales.total_price')}</div>
             <div className="text-3xl font-bold text-green-600">₹{total.toFixed(2)}</div>
           </div>
 
@@ -175,7 +176,7 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
             disabled={internalValue <= 0}
             className="w-full bg-green-600 text-white rounded-xl py-4 font-semibold text-lg active:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            Add to Cart
+            {t('common.add_to_cart')}
           </button>
         </div>
       </div>

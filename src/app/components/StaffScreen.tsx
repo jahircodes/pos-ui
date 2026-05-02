@@ -2,6 +2,7 @@
  * Staff list UI (StaffPanel) plus shared primitives (Modal, Button) for shop/staff flows.
  */
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, MoreVertical, Trash2, UserPlus2, Users, X } from 'lucide-react';
 
 export type StaffRole = 'admin' | 'staff';
@@ -74,6 +75,7 @@ const STAFF_LIMIT = 3;
  * Renders the staff list, add/edit form modal, and remove confirmation for one shop.
  */
 export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBack }: StaffPanelProps) {
+  const { t } = useTranslation();
   const [activeMenuStaffId, setActiveMenuStaffId] = useState('');
   const [isStaffFormOpen, setIsStaffFormOpen] = useState(false);
   const [editingStaffMember, setEditingStaffMember] = useState<StaffMember | null>(null);
@@ -158,17 +160,17 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
               <button
                 type="button"
                 onClick={onBack}
-                aria-label="Go back"
+                aria-label={t('common.go_back')}
                 className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700 active:bg-gray-200"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
             ) : null}
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{t('staff.title')}</h1>
               <p className="text-sm text-gray-500">
-                {usedStaffCount} of {STAFF_LIMIT} staff used
-                {activeShopName ? ` · ${activeShopName}` : ''}
+                {t('staff.usage', { count: usedStaffCount, limit: STAFF_LIMIT })}
+                {activeShopName ? t('staff.usage_shop_suffix', { shop: activeShopName }) : ''}
               </p>
             </div>
           </div>
@@ -187,10 +189,10 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
         {staffList.length === 0 ? (
           <div className="mt-16 flex flex-col items-center rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center shadow-sm">
             <Users className="mb-3 h-12 w-12 text-gray-400" />
-            <h2 className="text-lg font-semibold text-gray-900">No staff added yet</h2>
-            <p className="mt-1 text-sm text-gray-500">Add your first staff member to manage billing access.</p>
+            <h2 className="text-lg font-semibold text-gray-900">{t('staff.no_staff_title')}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t('staff.no_staff_hint')}</p>
             <Button
-              label="Add Staff"
+              label={t('staff.add_staff')}
               icon={UserPlus2}
               onClick={handleOpenAddStaff}
               className="mt-4 w-full sm:w-auto"
@@ -218,7 +220,7 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
 
       <div className="fixed bottom-20 left-0 right-0 px-4">
         <Button
-          label="+ Add Staff"
+          label={t('staff.add_staff_fab')}
           onClick={handleOpenAddStaff}
           className="w-full shadow-lg"
           variant="primary"
@@ -258,6 +260,7 @@ export function StaffCard({
   onOpenRemove,
   onToggleMenu,
 }: StaffCardProps) {
+  const { t } = useTranslation();
   return (
     <div className="relative rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
       <button
@@ -277,7 +280,7 @@ export function StaffCard({
 
       <button
         type="button"
-        aria-label="Open staff actions"
+        aria-label={t('staff.aria_staff_actions')}
         onClick={(event) => {
           event.stopPropagation();
           onToggleMenu();
@@ -297,14 +300,14 @@ export function StaffCard({
             onClick={() => onOpenEdit(staffMember)}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 active:bg-gray-100"
           >
-            Edit
+            {t('common.edit')}
           </button>
           <button
             type="button"
             onClick={() => onOpenRemove(staffMember)}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 active:bg-red-50"
           >
-            Remove
+            {t('common.remove')}
           </button>
         </div>
       ) : null}
@@ -334,6 +337,7 @@ export function Avatar({ name }: AvatarProps) {
  * Renders a role badge for admin or staff roles.
  */
 export function RoleBadge({ role }: RoleBadgeProps) {
+  const { t } = useTranslation();
   const isAdminRole = role === 'admin';
   return (
     <span
@@ -341,7 +345,7 @@ export function RoleBadge({ role }: RoleBadgeProps) {
         isAdminRole ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
       }`}
     >
-      {isAdminRole ? 'Admin' : 'Staff'}
+      {isAdminRole ? t('staff.role_admin') : t('staff.role_staff')}
     </span>
   );
 }
@@ -382,6 +386,7 @@ export function Button({
  * Renders a shared bottom-sheet modal container for staff forms and confirmations.
  */
 export function Modal({ isOpen, title, children, onClose }: ModalProps) {
+  const { t } = useTranslation();
   if (!isOpen) {
     return null;
   }
@@ -394,7 +399,7 @@ export function Modal({ isOpen, title, children, onClose }: ModalProps) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close modal"
+            aria-label={t('common.close_modal')}
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 active:bg-gray-200"
           >
             <X className="h-4 w-4" />
@@ -411,6 +416,7 @@ export function Modal({ isOpen, title, children, onClose }: ModalProps) {
  * edit flow updates name and mobile only.
  */
 function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFormModalProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
   const [password, setPassword] = useState('');
@@ -438,7 +444,7 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
   return (
     <Modal
       isOpen={isOpen}
-      title={initialStaffMember ? 'Edit Staff' : 'Add Staff'}
+      title={initialStaffMember ? t('staff.modal_edit') : t('staff.modal_add')}
       onClose={onClose}
     >
       <form
@@ -451,7 +457,7 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
 
           if (isAddMode) {
             if (password !== confirmPassword) {
-              setPasswordMismatchMessage('Passwords do not match');
+              setPasswordMismatchMessage(t('staff.password_mismatch'));
               return;
             }
             setPasswordMismatchMessage('');
@@ -470,28 +476,28 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
       >
         <div>
           <label htmlFor="staff-name" className="mb-1 block text-sm font-medium text-gray-700">
-            Name
+            {t('staff.field_name')}
           </label>
           <input
             id="staff-name"
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            placeholder="Enter full name"
+            placeholder={t('staff.placeholder_name')}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
         </div>
 
         <div>
           <label htmlFor="staff-mobile-number" className="mb-1 block text-sm font-medium text-gray-700">
-            Mobile Number
+            {t('staff.field_mobile')}
           </label>
           <input
             id="staff-mobile-number"
             type="tel"
             value={mobileNumber}
             onChange={(event) => setMobileNumber(event.target.value)}
-            placeholder="Enter mobile number"
+            placeholder={t('staff.placeholder_mobile')}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
         </div>
@@ -500,7 +506,7 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
           <>
             <div>
               <label htmlFor="staff-password" className="mb-1 block text-sm font-medium text-gray-700">
-                Password
+                {t('staff.field_password')}
               </label>
               <input
                 id="staff-password"
@@ -510,14 +516,14 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
                   setPassword(event.target.value);
                   setPasswordMismatchMessage('');
                 }}
-                placeholder="Enter password"
+                placeholder={t('staff.placeholder_password')}
                 autoComplete="new-password"
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
               />
             </div>
             <div>
               <label htmlFor="staff-confirm-password" className="mb-1 block text-sm font-medium text-gray-700">
-                Confirm Password
+                {t('staff.field_confirm_password')}
               </label>
               <input
                 id="staff-confirm-password"
@@ -527,7 +533,7 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
                   setConfirmPassword(event.target.value);
                   setPasswordMismatchMessage('');
                 }}
-                placeholder="Confirm password"
+                placeholder={t('staff.placeholder_confirm_password')}
                 autoComplete="new-password"
                 className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
               />
@@ -541,8 +547,8 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
         ) : null}
 
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button label="Cancel" variant="secondary" onClick={onClose} />
-          <Button label="Save" type="submit" disabled={isSaveDisabled} />
+          <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
+          <Button label={t('common.save')} type="submit" disabled={isSaveDisabled} />
         </div>
       </form>
     </Modal>
@@ -553,14 +559,16 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
  * Renders remove confirmation modal for destructive action.
  */
 function RemoveStaffModal({ isOpen, selectedStaffMember, onCancel, onConfirm }: RemoveStaffModalProps) {
+  const { t } = useTranslation();
   return (
-    <Modal isOpen={isOpen} title="Remove Staff" onClose={onCancel}>
+    <Modal isOpen={isOpen} title={t('staff.remove_title')} onClose={onCancel}>
       <p className="text-sm text-gray-600">
-        Remove this staff member?{selectedStaffMember ? ` (${selectedStaffMember.name})` : ''}
+        {t('staff.remove_confirm')}
+        {selectedStaffMember ? t('staff.remove_name_suffix', { name: selectedStaffMember.name }) : ''}
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Button label="Cancel" variant="secondary" onClick={onCancel} />
-        <Button label="Remove" variant="danger" icon={Trash2} onClick={onConfirm} />
+        <Button label={t('common.cancel')} variant="secondary" onClick={onCancel} />
+        <Button label={t('common.remove')} variant="danger" icon={Trash2} onClick={onConfirm} />
       </div>
     </Modal>
   );

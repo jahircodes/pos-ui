@@ -2,7 +2,8 @@
  * Shops and staff hub: tabbed Staff / Shops, per-shop staff lists, and active shop switching.
  */
 import { useEffect, useMemo, useState } from 'react';
-import { Building2, ChevronDown, MoreVertical, Plus, Store, Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Building2, ChevronDown, MoreVertical, Plus, Store, Trash2 } from 'lucide-react';
 import { Button, Modal, StaffPanel, type StaffMember } from './StaffScreen';
 
 export interface Shop {
@@ -58,6 +59,7 @@ interface RemoveShopModalProps {
  * Bottom-nav destination: tabs for staff (per active shop) and shop directory with add/edit/remove.
  */
 export function ShopStaffHubScreen() {
+  const { t } = useTranslation();
   const [hubTab, setHubTab] = useState<'staff' | 'shops'>('staff');
   const [shops, setShops] = useState<Shop[]>(INITIAL_SHOPS);
   const [activeShopId, setActiveShopId] = useState(DEFAULT_SHOP_ID);
@@ -126,8 +128,8 @@ export function ShopStaffHubScreen() {
     <div className="flex min-h-0 flex-1 flex-col bg-gray-50">
       <header className="sticky top-0 z-20 shrink-0 border-b border-gray-200 bg-white">
         <div className="p-4 pb-3">
-          <h1 className="text-2xl font-bold text-gray-900">Business</h1>
-          <p className="mt-0.5 text-sm text-gray-500">Shops, staff, and switching between locations.</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('business.title')}</h1>
+          <p className="mt-0.5 text-sm text-gray-500">{t('business.subtitle')}</p>
         </div>
 
         <div className="relative px-4 pb-3">
@@ -139,7 +141,7 @@ export function ShopStaffHubScreen() {
             aria-haspopup="listbox"
           >
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Active shop</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{t('business.active_shop')}</p>
               <p className="truncate text-base font-semibold text-gray-900">{activeShop.shopName}</p>
               <p className="truncate text-sm text-gray-500">{activeShop.address}</p>
             </div>
@@ -178,7 +180,7 @@ export function ShopStaffHubScreen() {
         {isShopPickerOpen ? (
           <button
             type="button"
-            aria-label="Close shop picker"
+            aria-label={t('business.aria_close_picker')}
             className="fixed inset-0 z-[15] bg-black/20"
             onClick={() => setIsShopPickerOpen(false)}
           />
@@ -192,7 +194,7 @@ export function ShopStaffHubScreen() {
               hubTab === 'staff' ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 active:bg-gray-200'
             }`}
           >
-            Staff
+            {t('business.tab_staff')}
           </button>
           <button
             type="button"
@@ -201,7 +203,7 @@ export function ShopStaffHubScreen() {
               hubTab === 'shops' ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 active:bg-gray-200'
             }`}
           >
-            Shops
+            {t('business.tab_shops')}
           </button>
         </div>
       </header>
@@ -285,15 +287,16 @@ function ShopsTabContent({
   onOpenEditShop,
   onOpenRemoveShop,
 }: ShopsTabContentProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <main className="min-h-0 flex-1 overflow-y-auto p-4">
         {shops.length === 0 ? (
           <div className="mt-16 flex flex-col items-center rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center shadow-sm">
             <Store className="mb-3 h-12 w-12 text-gray-400" />
-            <h2 className="text-lg font-semibold text-gray-900">No shops yet</h2>
-            <p className="mt-1 text-sm text-gray-500">Add a shop to get started.</p>
-            <Button label="Add Shop" icon={Plus} onClick={onOpenAddShop} className="mt-4 w-full sm:w-auto" />
+            <h2 className="text-lg font-semibold text-gray-900">{t('business.no_shops')}</h2>
+            <p className="mt-1 text-sm text-gray-500">{t('business.no_shops_hint')}</p>
+            <Button label={t('business.add_shop')} icon={Plus} onClick={onOpenAddShop} className="mt-4 w-full sm:w-auto" />
           </div>
         ) : (
           <div className="space-y-3">
@@ -315,7 +318,7 @@ function ShopsTabContent({
 
       <div className="fixed bottom-20 left-0 right-0 px-4">
         <Button
-          label="+ Add Shop"
+          label={t('business.add_shop_fab')}
           onClick={onOpenAddShop}
           className="w-full shadow-lg"
           variant="primary"
@@ -334,6 +337,7 @@ function ShopCard({
   onOpenEdit,
   onOpenRemove,
 }: ShopCardProps) {
+  const { t } = useTranslation();
   return (
     <div
       className={`relative rounded-xl border bg-white p-3 shadow-sm ${
@@ -353,7 +357,7 @@ function ShopCard({
             <p className="truncate text-base font-semibold text-gray-900">{shop.shopName}</p>
             {isActive ? (
               <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                Active
+                {t('common.active')}
               </span>
             ) : null}
           </div>
@@ -364,7 +368,7 @@ function ShopCard({
 
       <button
         type="button"
-        aria-label="Open shop actions"
+        aria-label={t('business.aria_shop_actions')}
         onClick={(event) => {
           event.stopPropagation();
           onToggleMenu();
@@ -384,14 +388,14 @@ function ShopCard({
             onClick={onOpenEdit}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 active:bg-gray-100"
           >
-            Edit
+            {t('common.edit')}
           </button>
           <button
             type="button"
             onClick={onOpenRemove}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 active:bg-red-50"
           >
-            Remove
+            {t('common.remove')}
           </button>
         </div>
       ) : null}
@@ -400,6 +404,7 @@ function ShopCard({
 }
 
 function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalProps) {
+  const { t } = useTranslation();
   const [shopName, setShopName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
@@ -416,7 +421,7 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
   const isSaveDisabled = !shopName.trim() || !address.trim() || !phone.trim();
 
   return (
-    <Modal isOpen={isOpen} title={initialShop ? 'Edit Shop' : 'Add Shop'} onClose={onClose}>
+    <Modal isOpen={isOpen} title={initialShop ? t('business.modal_edit_shop') : t('business.modal_add_shop')} onClose={onClose}>
       <form
         className="space-y-4"
         onSubmit={(event) => {
@@ -437,46 +442,46 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
       >
         <div>
           <label htmlFor="shop-name" className="mb-1 block text-sm font-medium text-gray-700">
-            Shop Name
+            {t('business.field_shop_name')}
           </label>
           <input
             id="shop-name"
             type="text"
             value={shopName}
             onChange={(event) => setShopName(event.target.value)}
-            placeholder="Enter shop name"
+            placeholder={t('business.placeholder_shop_name')}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
         </div>
         <div>
           <label htmlFor="shop-address" className="mb-1 block text-sm font-medium text-gray-700">
-            Address
+            {t('business.field_address')}
           </label>
           <textarea
             id="shop-address"
             value={address}
             onChange={(event) => setAddress(event.target.value)}
-            placeholder="Street, area, city"
+            placeholder={t('business.placeholder_address')}
             rows={3}
             className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
         </div>
         <div>
           <label htmlFor="shop-phone" className="mb-1 block text-sm font-medium text-gray-700">
-            Phone
+            {t('business.field_phone')}
           </label>
           <input
             id="shop-phone"
             type="tel"
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
-            placeholder="Shop phone number"
+            placeholder={t('business.placeholder_shop_phone')}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
         </div>
         <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button label="Cancel" variant="secondary" onClick={onClose} />
-          <Button label="Save" type="submit" disabled={isSaveDisabled} />
+          <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
+          <Button label={t('common.save')} type="submit" disabled={isSaveDisabled} />
         </div>
       </form>
     </Modal>
@@ -490,19 +495,21 @@ function RemoveShopModal({
   onConfirm,
   canRemove,
 }: RemoveShopModalProps & { canRemove: boolean }) {
+  const { t } = useTranslation();
   return (
-    <Modal isOpen={isOpen} title="Remove Shop" onClose={onCancel}>
+    <Modal isOpen={isOpen} title={t('business.remove_shop_title')} onClose={onCancel}>
       {!canRemove ? (
-        <p className="text-sm text-gray-600">You need at least one shop. Add another shop before removing this one.</p>
+        <p className="text-sm text-gray-600">{t('business.remove_shop_need_one')}</p>
       ) : (
         <p className="text-sm text-gray-600">
-          Remove this shop and its staff list from this device?{selectedShop ? ` (${selectedShop.shopName})` : ''}
+          {t('business.remove_shop_confirm')}
+          {selectedShop ? t('business.remove_shop_name_suffix', { name: selectedShop.shopName }) : ''}
         </p>
       )}
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Button label="Cancel" variant="secondary" onClick={onCancel} />
+        <Button label={t('common.cancel')} variant="secondary" onClick={onCancel} />
         <Button
-          label="Remove"
+          label={t('common.remove')}
           variant="danger"
           icon={Trash2}
           onClick={onConfirm}

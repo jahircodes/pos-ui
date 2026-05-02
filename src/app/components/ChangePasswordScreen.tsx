@@ -2,6 +2,7 @@
  * Mobile-first change password form (UI only; no API calls).
  */
 import { useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ function PasswordField({
   onToggleVisibility,
   autoComplete = 'current-password',
 }: PasswordFieldProps) {
+  const { t } = useTranslation();
   return (
     <div>
       <label htmlFor={id} className="mb-1 block text-sm font-medium text-gray-700">
@@ -48,7 +50,7 @@ function PasswordField({
         <button
           type="button"
           onClick={onToggleVisibility}
-          aria-label={isVisible ? 'Hide password' : 'Show password'}
+          aria-label={isVisible ? t('password.aria_hide') : t('password.aria_show')}
           className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-lg text-gray-500 active:bg-gray-100"
         >
           {isVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -62,6 +64,7 @@ function PasswordField({
  * Renders the change password flow with validation feedback and success toast.
  */
 export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
+  const { t } = useTranslation();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -75,17 +78,17 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
     setConfirmMismatch(false);
 
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
-      toast.error('Please fill in all fields');
+      toast.error(t('password.toast_fill_all'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
       setConfirmMismatch(true);
-      toast.error('New password and confirmation do not match');
+      toast.error(t('password.toast_mismatch'));
       return;
     }
 
-    toast.success('Password updated successfully');
+    toast.success(t('password.toast_success'));
     setCurrentPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -98,12 +101,12 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
           <button
             type="button"
             onClick={onBack}
-            aria-label="Go back"
+            aria-label={t('common.go_back')}
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-700 active:bg-gray-200"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Change Password</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t('password.title')}</h1>
         </div>
       </header>
 
@@ -112,7 +115,7 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
           <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
             <PasswordField
               id="current-password"
-              label="Current Password"
+              label={t('password.current')}
               value={currentPassword}
               onChange={setCurrentPassword}
               isVisible={showCurrent}
@@ -125,7 +128,7 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
             <div className="space-y-4">
               <PasswordField
                 id="new-password"
-                label="New Password"
+                label={t('password.new')}
                 value={newPassword}
                 onChange={(v) => {
                   setNewPassword(v);
@@ -137,7 +140,7 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
               />
               <PasswordField
                 id="confirm-new-password"
-                label="Confirm New Password"
+                label={t('password.confirm')}
                 value={confirmPassword}
                 onChange={(v) => {
                   setConfirmPassword(v);
@@ -148,7 +151,7 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
                 autoComplete="new-password"
               />
               {confirmMismatch ? (
-                <p className="text-sm text-red-600">Passwords do not match.</p>
+                <p className="text-sm text-red-600">{t('password.mismatch_inline')}</p>
               ) : null}
             </div>
           </div>
@@ -157,7 +160,7 @@ export function ChangePasswordScreen({ onBack }: ChangePasswordScreenProps) {
             type="submit"
             className="w-full rounded-xl bg-green-600 py-4 text-base font-semibold text-white shadow-md active:bg-green-700"
           >
-            Update Password
+            {t('password.submit')}
           </button>
         </form>
       </main>

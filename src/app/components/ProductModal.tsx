@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useStore, Product } from '../store';
 import { X, Plus, Minus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,6 +10,7 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product, onClose }: ProductModalProps) {
+  const { t } = useTranslation();
   const addProduct = useStore((state) => state.addProduct);
   const updateProduct = useStore((state) => state.updateProduct);
 
@@ -41,7 +43,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     e.preventDefault();
 
     if (!name.trim() || !price || !stock) {
-      toast.error('Please fill all fields');
+      toast.error(t('inventory.toast_fill_all'));
       return;
     }
 
@@ -51,21 +53,21 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     const finalStock = baseStock + adjustment;
 
     if (isNaN(priceNum) || priceNum <= 0) {
-      toast.error('Please enter a valid price');
+      toast.error(t('inventory.toast_invalid_price'));
       return;
     }
 
     if (finalStock < 0) {
-      toast.error('Stock cannot be negative');
+      toast.error(t('inventory.toast_negative_stock'));
       return;
     }
 
     if (product) {
       updateProduct(product.id, { name, price: priceNum, stock: finalStock, unit, priceUnit });
-      toast.success('Product updated successfully');
+      toast.success(t('inventory.toast_product_updated'));
     } else {
       addProduct({ name, price: priceNum, stock: finalStock, unit, priceUnit });
-      toast.success('Product added successfully');
+      toast.success(t('inventory.toast_product_added'));
     }
 
     onClose();
@@ -76,7 +78,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-md p-6 animate-slide-up">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-bold text-gray-900">
-            {product ? 'Edit Product' : 'Add Product'}
+            {product ? t('inventory.modal_edit') : t('inventory.modal_add')}
           </h2>
           <button
             onClick={onClose}
@@ -89,21 +91,21 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Product Name
+              {t('inventory.field_product_name')}
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Enter product name"
+              placeholder={t('inventory.placeholder_product_name')}
               autoFocus
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Unit Type
+              {t('inventory.field_unit_type')}
             </label>
             <select
               value={unit}
@@ -116,15 +118,15 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               }}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
-              <option value="piece">Pieces (PCS)</option>
-              <option value="kg">Kilograms (KG)</option>
-              <option value="litre">Litres (L)</option>
+              <option value="piece">{t('inventory.unit_piece')}</option>
+              <option value="kg">{t('inventory.unit_kg')}</option>
+              <option value="litre">{t('inventory.unit_litre')}</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Price (₹)
+              {t('inventory.field_price')}
             </label>
             <input
               type="number"
@@ -138,14 +140,14 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Price Unit (e.g., KG, L, PCS, pack, bottle)
+              {t('inventory.field_price_unit')}
             </label>
             <input
               type="text"
               value={priceUnit}
               onChange={(e) => setPriceUnit(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="KG"
+              placeholder={t('inventory.placeholder_price_unit')}
             />
           </div>
 
@@ -153,7 +155,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Stock
+                  {t('inventory.field_current_stock')}
                 </label>
                 <div className="text-2xl font-bold text-gray-900 px-4 py-3">
                   {stock}
@@ -162,7 +164,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adjust Stock
+                  {t('inventory.field_adjust_stock')}
                 </label>
                 <div className="flex items-center gap-3">
                   <button
@@ -188,14 +190,16 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  New stock will be: {(parseFloat(stock) + parseFloat(stockAdjustment || '0')).toFixed(2)}
+                  {t('inventory.new_stock_will_be', {
+                    value: (parseFloat(stock) + parseFloat(stockAdjustment || '0')).toFixed(2),
+                  })}
                 </p>
               </div>
             </>
           ) : (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Initial Stock
+                {t('inventory.field_initial_stock')}
               </label>
               <input
                 type="number"
@@ -211,7 +215,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
             type="submit"
             className="w-full bg-green-600 text-white rounded-xl py-3 font-semibold active:bg-green-700 transition-colors"
           >
-            {product ? 'Update Product' : 'Add Product'}
+            {product ? t('inventory.submit_update') : t('inventory.submit_add')}
           </button>
         </form>
       </div>

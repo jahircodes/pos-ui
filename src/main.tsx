@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import './i18n.js';
 import App from './app/App.tsx';
 import { PlatformDashboard } from './app/components/platform/PlatformDashboard.tsx';
 import './styles/index.css';
