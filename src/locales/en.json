@@ -24,11 +24,16 @@
   },
   "nav": {
     "home": "Home",
-    "sale": "Sale",
     "products": "Products",
     "history": "History",
     "business": "Business",
     "settings": "Settings"
+  },
+  "sales_hub": {
+    "title": "Products",
+    "subtitle": "Sell and manage your inventory.",
+    "tab_sell": "Sell",
+    "tab_products": "Products"
   },
   "dashboard": {
     "title": "My Shop",

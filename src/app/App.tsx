@@ -2,19 +2,32 @@ import { useState } from 'react';
 import { Toaster } from 'sonner';
 import { BottomNav } from './components/BottomNav';
 import { Dashboard } from './components/Dashboard';
-import { SaleScreen } from './components/SaleScreen';
-import { ProductsScreen } from './components/ProductsScreen';
 import { HistoryScreen } from './components/HistoryScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { ShopStaffHubScreen } from './components/ShopStaffHubScreen';
+import { SaleProductsHubScreen, type SaleProductsHubTab } from './components/SaleProductsHubScreen';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    'home' | 'sale' | 'products' | 'history' | 'business' | 'settings'
+    'home' | 'shop' | 'history' | 'business' | 'settings'
   >('home');
+  const [shopHubTab, setShopHubTab] = useState<SaleProductsHubTab>('sell');
+
+  const handleMainTabChange = (tab: 'home' | 'shop' | 'history' | 'business' | 'settings') => {
+    if (tab === 'shop' && activeTab !== 'shop') {
+      setShopHubTab('sell');
+    }
+    setActiveTab(tab);
+  };
 
   const handleNewSale = () => {
-    setActiveTab('sale');
+    setShopHubTab('sell');
+    setActiveTab('shop');
+  };
+
+  const handleViewProducts = () => {
+    setShopHubTab('products');
+    setActiveTab('shop');
   };
 
   const handleSaleComplete = () => {
@@ -29,18 +42,23 @@ export default function App() {
         {activeTab === 'home' && (
           <Dashboard
             onNewSale={handleNewSale}
-            onViewProducts={() => setActiveTab('products')}
+            onViewProducts={handleViewProducts}
             onViewHistory={() => setActiveTab('history')}
           />
         )}
-        {activeTab === 'sale' && <SaleScreen onComplete={handleSaleComplete} />}
-        {activeTab === 'products' && <ProductsScreen />}
+        {activeTab === 'shop' && (
+          <SaleProductsHubScreen
+            hubTab={shopHubTab}
+            onHubTabChange={setShopHubTab}
+            onSaleComplete={handleSaleComplete}
+          />
+        )}
         {activeTab === 'history' && <HistoryScreen />}
         {activeTab === 'business' && <ShopStaffHubScreen />}
         {activeTab === 'settings' && <SettingsScreen />}
       </div>
 
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={handleMainTabChange} />
     </div>
   );
 }
