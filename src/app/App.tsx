@@ -6,11 +6,11 @@ import { SaleScreen } from './components/SaleScreen';
 import { ProductsScreen } from './components/ProductsScreen';
 import { HistoryScreen } from './components/HistoryScreen';
 import { SettingsScreen } from './components/SettingsScreen';
-import { StaffScreen } from './components/StaffScreen';
+import { ShopStaffHubScreen } from './components/ShopStaffHubScreen';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    'home' | 'sale' | 'products' | 'history' | 'staff' | 'settings'
+    'home' | 'sale' | 'products' | 'history' | 'shops' | 'settings'
   >('home');
 
   const handleNewSale = () => {
@@ -25,7 +25,7 @@ export default function App() {
     <div className="size-full flex flex-col bg-gray-50">
       <Toaster position="top-center" richColors />
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {activeTab === 'home' && (
           <Dashboard
             onNewSale={handleNewSale}
@@ -36,7 +36,7 @@ export default function App() {
         {activeTab === 'sale' && <SaleScreen onComplete={handleSaleComplete} />}
         {activeTab === 'products' && <ProductsScreen />}
         {activeTab === 'history' && <HistoryScreen />}
-        {activeTab === 'staff' && <StaffScreen />}
+        {activeTab === 'shops' && <ShopStaffHubScreen />}
         {activeTab === 'settings' && <SettingsScreen />}
       </div>
 

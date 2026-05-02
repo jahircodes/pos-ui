@@ -1,19 +1,23 @@
 /**
- * Mobile-first staff management UI for adding, editing, and removing staff members.
+ * Staff list UI (StaffPanel) plus shared primitives (Modal, Button) for shop/staff flows.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, MoreVertical, Trash2, UserPlus2, Users, X } from 'lucide-react';
 
-type StaffRole = 'admin' | 'staff';
+export type StaffRole = 'admin' | 'staff';
 
-interface StaffMember {
+export interface StaffMember {
   staffId: string;
   name: string;
   mobileNumber: string;
   role: StaffRole;
 }
 
-interface StaffScreenProps {
+/** Controlled staff list for the active shop (or standalone screen). */
+export interface StaffPanelProps {
+  staffList: StaffMember[];
+  onStaffListChange: (nextList: StaffMember[]) => void;
+  activeShopName?: string;
   onBack?: () => void;
 }
 
@@ -67,13 +71,9 @@ interface RemoveStaffModalProps {
 const STAFF_LIMIT = 3;
 
 /**
- * Renders the staff list, add/edit form modal, and remove confirmation.
+ * Renders the staff list, add/edit form modal, and remove confirmation for one shop.
  */
-export function StaffScreen({ onBack }: StaffScreenProps) {
-  const [staffList, setStaffList] = useState<StaffMember[]>([
-    { staffId: 'staff-1', name: 'Ravi Kumar', mobileNumber: '9876543210', role: 'admin' },
-    { staffId: 'staff-2', name: 'Neha Singh', mobileNumber: '9123456780', role: 'staff' },
-  ]);
+export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBack }: StaffPanelProps) {
   const [activeMenuStaffId, setActiveMenuStaffId] = useState('');
   const [isStaffFormOpen, setIsStaffFormOpen] = useState(false);
   const [editingStaffMember, setEditingStaffMember] = useState<StaffMember | null>(null);
@@ -122,8 +122,8 @@ export function StaffScreen({ onBack }: StaffScreenProps) {
 
   const handleSaveStaff = (staffMemberInput: Omit<StaffMember, 'staffId'>, editingStaffId?: string) => {
     if (editingStaffId) {
-      setStaffList((previousList) =>
-        previousList.map((staffMember) =>
+      onStaffListChange(
+        staffList.map((staffMember) =>
           staffMember.staffId === editingStaffId ? { ...staffMember, ...staffMemberInput } : staffMember
         )
       );
@@ -134,7 +134,7 @@ export function StaffScreen({ onBack }: StaffScreenProps) {
       staffId: `staff-${Date.now()}`,
       ...staffMemberInput,
     };
-    setStaffList((previousList) => [...previousList, newStaffMember]);
+    onStaffListChange([...staffList, newStaffMember]);
   };
 
   const handleConfirmRemoveStaff = () => {
@@ -142,15 +142,15 @@ export function StaffScreen({ onBack }: StaffScreenProps) {
       return;
     }
 
-    setStaffList((previousList) =>
-      previousList.filter((staffMember) => staffMember.staffId !== selectedStaffMember.staffId)
+    onStaffListChange(
+      staffList.filter((staffMember) => staffMember.staffId !== selectedStaffMember.staffId)
     );
     setIsRemoveModalOpen(false);
     setSelectedStaffMember(null);
   };
 
   return (
-    <div className="flex h-full flex-col bg-gray-50 pb-24">
+    <div className="flex min-h-0 flex-1 flex-col bg-gray-50 pb-24">
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between gap-3 p-4">
           <div className="flex items-center gap-3">
@@ -168,6 +168,7 @@ export function StaffScreen({ onBack }: StaffScreenProps) {
               <h1 className="text-2xl font-bold text-gray-900">Staff</h1>
               <p className="text-sm text-gray-500">
                 {usedStaffCount} of {STAFF_LIMIT} staff used
+                {activeShopName ? ` · ${activeShopName}` : ''}
               </p>
             </div>
           </div>
