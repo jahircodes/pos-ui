@@ -34,6 +34,8 @@ interface StoreState {
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   completeSale: (paymentMethod: 'cash' | 'upi') => void;
+  /** Reverts the most recent sale (stock + cart + transactions). Returns false if none. */
+  undoLastTransaction: () => boolean;
 }
 
 export const useStore = create<StoreState>((set, get) => ({
@@ -126,4 +128,35 @@ export const useStore = create<StoreState>((set, get) => ({
         products: updatedProducts,
       };
     }),
+
+  undoLastTransaction: () => {
+    const state = get();
+    if (state.transactions.length === 0) {
+      return false;
+    }
+    const [lastTransaction, ...restTransactions] = state.transactions;
+
+    const restoredProducts = state.products.map((product) => {
+      const line = lastTransaction.items.find((item) => item.product.id === product.id);
+      if (line) {
+        return { ...product, stock: product.stock + line.quantity };
+      }
+      return product;
+    });
+
+    const restoredCart = lastTransaction.items.map((item) => {
+      const fresh = restoredProducts.find((p) => p.id === item.product.id);
+      return {
+        product: fresh ? { ...fresh } : { ...item.product },
+        quantity: item.quantity,
+      };
+    });
+
+    set({
+      transactions: restTransactions,
+      products: restoredProducts,
+      cart: restoredCart,
+    });
+    return true;
+  },
 }));

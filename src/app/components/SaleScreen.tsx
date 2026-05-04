@@ -8,6 +8,8 @@ import { WeightQuantityInput } from './WeightQuantityInput';
 import { QuantityModal } from './QuantityModal';
 import { formatQuantityDisplay } from '../utils/formatWeight';
 import { ListLoadMoreFooter, LOAD_MORE_CHUNK } from './ListLoadMoreFooter';
+import { CashPaymentSheet } from './CashPaymentSheet';
+import { UpiPaymentSheet } from './UpiPaymentSheet';
 
 interface SaleScreenProps {
   onComplete: () => void;
@@ -18,6 +20,8 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
+  const [isCashPaymentOpen, setIsCashPaymentOpen] = useState(false);
+  const [isUpiPaymentOpen, setIsUpiPaymentOpen] = useState(false);
   const products = useStore((state) => state.products);
   const cart = useStore((state) => state.cart);
   const updateCartQuantity = useStore((state) => state.updateCartQuantity);
@@ -69,6 +73,32 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
     completeSale(paymentMethod);
     toast.success(t('sales.toast_sale_complete'));
     onComplete();
+  };
+
+  const handleOpenCashPayment = () => {
+    if (cart.length === 0) {
+      toast.error(t('sales.toast_cart_empty'));
+      return;
+    }
+    setIsCashPaymentOpen(true);
+  };
+
+  const handleConfirmCashSale = () => {
+    handleCompleteSale('cash');
+    setIsCashPaymentOpen(false);
+  };
+
+  const handleOpenUpiPayment = () => {
+    if (cart.length === 0) {
+      toast.error(t('sales.toast_cart_empty'));
+      return;
+    }
+    setIsUpiPaymentOpen(true);
+  };
+
+  const handleConfirmUpiSale = () => {
+    handleCompleteSale('upi');
+    setIsUpiPaymentOpen(false);
   };
 
   const handleAddToCart = (product: Product) => {
@@ -219,14 +249,16 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
 
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => handleCompleteSale('cash')}
+                type="button"
+                onClick={handleOpenCashPayment}
                 className="bg-green-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-green-700 transition-colors"
               >
                 <Banknote className="w-5 h-5" />
                 {t('sales.cash')}
               </button>
               <button
-                onClick={() => handleCompleteSale('upi')}
+                type="button"
+                onClick={handleOpenUpiPayment}
                 className="bg-blue-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
               >
                 <Smartphone className="w-5 h-5" />
@@ -260,6 +292,22 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
           product={selectedProduct}
           onConfirm={handleConfirmQuantity}
           onClose={() => setSelectedProduct(null)}
+        />
+      )}
+
+      {isCashPaymentOpen && (
+        <CashPaymentSheet
+          cartTotal={cartTotal}
+          onClose={() => setIsCashPaymentOpen(false)}
+          onConfirm={handleConfirmCashSale}
+        />
+      )}
+
+      {isUpiPaymentOpen && (
+        <UpiPaymentSheet
+          cartTotal={cartTotal}
+          onClose={() => setIsUpiPaymentOpen(false)}
+          onConfirm={handleConfirmUpiSale}
         />
       )}
     </div>
