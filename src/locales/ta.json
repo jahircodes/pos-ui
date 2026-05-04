@@ -236,7 +236,10 @@
     "remove_shop_title": "கடை அகற்று",
     "remove_shop_need_one": "குறைந்தது ஒரு கடை வேண்டும்.",
     "remove_shop_confirm": "இந்த கடையை இங்கிருந்து அகற்றவா? ஊழியர் பட்டியலும் நீக்கப்படும்.",
-    "remove_shop_name_suffix": " ({{name}})"
+    "remove_shop_name_suffix": " ({{name}})",
+    "shop_current_badge": "தற்போதையது",
+    "disable_shop": "கடையை முடக்கு",
+    "activate_shop": "கடையை இயக்கு"
   },
   "staff": {
     "title": "ஊழியர்",
@@ -260,8 +263,10 @@
     "remove_title": "ஊழியர் அகற்று",
     "remove_confirm": "இந்த ஊழியரை அகற்றவா?",
     "remove_name_suffix": " ({{name}})",
-    "role_admin": "நிர்வாகி",
-    "role_staff": "ஊழியர்",
+    "status_active": "செயலில்",
+    "status_disabled": "முடக்கப்பட்டது",
+    "disable_staff": "முடக்கு",
+    "activate_staff": "இயக்கு",
     "aria_staff_actions": "ஊழியர் செயல்கள்"
   }
 }

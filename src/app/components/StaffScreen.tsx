@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, MoreVertical, Trash2, UserPlus2, Users, X } from 'lucide-react';
+import { HubListEntityIcon } from './HubListEntityIcon';
 
 export type StaffRole = 'admin' | 'staff';
 
@@ -12,6 +13,8 @@ export interface StaffMember {
   name: string;
   mobileNumber: string;
   role: StaffRole;
+  /** When false, staff cannot sign in or bill (slot still counts toward limit). */
+  isActive: boolean;
 }
 
 /** Controlled staff list for the active shop (or standalone screen). */
@@ -27,15 +30,8 @@ interface StaffCardProps {
   isMenuOpen: boolean;
   onOpenEdit: (staffMember: StaffMember) => void;
   onOpenRemove: (staffMember: StaffMember) => void;
+  onToggleActive: (staffMember: StaffMember) => void;
   onToggleMenu: () => void;
-}
-
-interface AvatarProps {
-  name: string;
-}
-
-interface RoleBadgeProps {
-  role: StaffRole;
 }
 
 interface ButtonProps {
@@ -71,6 +67,11 @@ interface RemoveStaffModalProps {
 
 const STAFF_LIMIT = 3;
 
+/** Admins are kept in parent state but never listed under Business → Staff */
+export function isStaffMemberHiddenFromShopList(member: StaffMember): boolean {
+  return String(member.role ?? '').toLowerCase() === 'admin';
+}
+
 /**
  * Renders the staff list, add/edit form modal, and remove confirmation for one shop.
  */
@@ -82,7 +83,12 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
   const [isRemoveModalOpen, setIsRemoveModalOpen] = useState(false);
   const [selectedStaffMember, setSelectedStaffMember] = useState<StaffMember | null>(null);
 
-  const usedStaffCount = staffList.length;
+  const visibleStaffList = useMemo(
+    () => staffList.filter((member) => !isStaffMemberHiddenFromShopList(member)),
+    [staffList],
+  );
+
+  const usedStaffCount = visibleStaffList.length;
   const usageProgressPercent = Math.min((usedStaffCount / STAFF_LIMIT) * 100, 100);
 
   useEffect(() => {
@@ -135,6 +141,7 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
     const newStaffMember: StaffMember = {
       staffId: `staff-${Date.now()}`,
       ...staffMemberInput,
+      isActive: staffMemberInput.isActive ?? true,
     };
     onStaffListChange([...staffList, newStaffMember]);
   };
@@ -151,8 +158,21 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
     setSelectedStaffMember(null);
   };
 
+  const handleToggleStaffActive = (staffMember: StaffMember) => {
+    setActiveMenuStaffId('');
+    onStaffListChange(
+      staffList.map((member) =>
+        member.staffId === staffMember.staffId ? { ...member, isActive: !member.isActive } : member
+      )
+    );
+  };
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-gray-50 pb-24">
+    <div
+      className={`flex min-h-0 flex-1 flex-col bg-gray-50 ${
+        visibleStaffList.length > 0 ? 'pb-24' : 'pb-20'
+      }`}
+    >
       <header className="sticky top-0 z-10 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between gap-3 p-4">
           <div className="flex items-center gap-3">
@@ -186,7 +206,7 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
       </header>
 
       <main className="flex-1 overflow-y-auto p-4">
-        {staffList.length === 0 ? (
+        {visibleStaffList.length === 0 ? (
           <div className="mt-16 flex flex-col items-center rounded-xl border border-dashed border-gray-300 bg-white p-6 text-center shadow-sm">
             <Users className="mb-3 h-12 w-12 text-gray-400" />
             <h2 className="text-lg font-semibold text-gray-900">{t('staff.no_staff_title')}</h2>
@@ -200,7 +220,7 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
           </div>
         ) : (
           <div className="space-y-3">
-            {staffList.map((staffMember) => (
+            {visibleStaffList.map((staffMember) => (
               <StaffCard
                 key={staffMember.staffId}
                 staffMember={staffMember}
@@ -212,20 +232,23 @@ export function StaffPanel({ staffList, onStaffListChange, activeShopName, onBac
                 }
                 onOpenEdit={handleOpenEditStaff}
                 onOpenRemove={handleOpenRemoveStaff}
+                onToggleActive={handleToggleStaffActive}
               />
             ))}
           </div>
         )}
       </main>
 
-      <div className="fixed bottom-20 left-0 right-0 px-4">
-        <Button
-          label={t('staff.add_staff_fab')}
-          onClick={handleOpenAddStaff}
-          className="w-full shadow-lg"
-          variant="primary"
-        />
-      </div>
+      {visibleStaffList.length > 0 ? (
+        <div className="fixed bottom-20 left-0 right-0 px-4">
+          <Button
+            label={t('staff.add_staff_fab')}
+            onClick={handleOpenAddStaff}
+            className="w-full shadow-lg"
+            variant="primary"
+          />
+        </div>
+      ) : null}
 
       <StaffFormModal
         isOpen={isStaffFormOpen}
@@ -258,21 +281,36 @@ export function StaffCard({
   isMenuOpen,
   onOpenEdit,
   onOpenRemove,
+  onToggleActive,
   onToggleMenu,
 }: StaffCardProps) {
   const { t } = useTranslation();
+  const isStaffActive = staffMember.isActive;
+
   return (
-    <div className="relative rounded-xl border border-gray-100 bg-white p-3 shadow-sm">
+    <div
+      className={`relative rounded-xl border p-3 shadow-sm ${
+        isStaffActive
+          ? 'border-gray-100 bg-white'
+          : 'border-gray-200 bg-gray-50/90 opacity-95'
+      }`}
+    >
       <button
         type="button"
         onClick={() => onOpenEdit(staffMember)}
-        className="flex w-full items-center gap-3 rounded-xl p-1 text-left active:bg-gray-50"
+        className="flex w-full items-center gap-3 rounded-xl p-1 text-left active:bg-gray-50/80"
       >
-        <Avatar name={staffMember.name} />
+        <HubListEntityIcon kind="staff" />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-base font-semibold text-gray-900">{staffMember.name}</p>
-            <RoleBadge role={staffMember.role} />
+          <div className="flex flex-wrap items-center gap-2">
+            <p
+              className={`truncate text-base font-semibold ${
+                isStaffActive ? 'text-gray-900' : 'text-gray-600'
+              }`}
+            >
+              {staffMember.name}
+            </p>
+            <StaffStatusBadge isActive={isStaffActive} />
           </div>
           <p className="text-sm text-gray-500">{staffMember.mobileNumber}</p>
         </div>
@@ -304,6 +342,13 @@ export function StaffCard({
           </button>
           <button
             type="button"
+            onClick={() => onToggleActive(staffMember)}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 active:bg-gray-100"
+          >
+            {isStaffActive ? t('staff.disable_staff') : t('staff.activate_staff')}
+          </button>
+          <button
+            type="button"
             onClick={() => onOpenRemove(staffMember)}
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 active:bg-red-50"
           >
@@ -315,37 +360,20 @@ export function StaffCard({
   );
 }
 
-/**
- * Renders a circular initials avatar.
- */
-export function Avatar({ name }: AvatarProps) {
-  const initials = name
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
-      {initials}
-    </div>
-  );
+interface StaffStatusBadgeProps {
+  isActive: boolean;
 }
 
-/**
- * Renders a role badge for admin or staff roles.
- */
-export function RoleBadge({ role }: RoleBadgeProps) {
+/** Compact active / disabled label for staff rows */
+export function StaffStatusBadge({ isActive }: StaffStatusBadgeProps) {
   const { t } = useTranslation();
-  const isAdminRole = role === 'admin';
   return (
     <span
       className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        isAdminRole ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+        isActive ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-100 text-amber-800'
       }`}
     >
-      {isAdminRole ? t('staff.role_admin') : t('staff.role_staff')}
+      {isActive ? t('staff.status_active') : t('staff.status_disabled')}
     </span>
   );
 }
@@ -468,6 +496,7 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
               name: name.trim(),
               mobileNumber: mobileNumber.trim(),
               role: isAddMode ? 'staff' : initialStaffMember.role,
+              isActive: isAddMode ? true : initialStaffMember.isActive,
             },
             initialStaffMember?.staffId
           );

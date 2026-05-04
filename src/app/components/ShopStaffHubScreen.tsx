@@ -3,14 +3,17 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Building2, ChevronDown, MoreVertical, Plus, Store, Trash2 } from 'lucide-react';
-import { Button, Modal, StaffPanel, type StaffMember } from './StaffScreen';
+import { ChevronDown, MoreVertical, Plus, Store, Trash2 } from 'lucide-react';
+import { HubListEntityIcon } from './HubListEntityIcon';
+import { Button, Modal, StaffPanel, StaffStatusBadge, type StaffMember } from './StaffScreen';
 
 export interface Shop {
   shopId: string;
   shopName: string;
   address: string;
   phone: string;
+  /** When false, shop is hidden from day-to-day use; staff data is kept. */
+  isActive: boolean;
 }
 
 const DEFAULT_SHOP_ID = 'shop-1';
@@ -21,24 +24,38 @@ const INITIAL_SHOPS: Shop[] = [
     shopName: 'Main Store',
     address: '12 Market Road, Bengaluru',
     phone: '08041234567',
+    isActive: true,
   },
 ];
 
 const INITIAL_STAFF_BY_SHOP: Record<string, StaffMember[]> = {
   [DEFAULT_SHOP_ID]: [
-    { staffId: 'staff-1', name: 'Ravi Kumar', mobileNumber: '9876543210', role: 'admin' },
-    { staffId: 'staff-2', name: 'Neha Singh', mobileNumber: '9123456780', role: 'staff' },
+    {
+      staffId: 'staff-1',
+      name: 'Ravi Kumar',
+      mobileNumber: '9876543210',
+      role: 'admin',
+      isActive: true,
+    },
+    {
+      staffId: 'staff-2',
+      name: 'Neha Singh',
+      mobileNumber: '9123456780',
+      role: 'staff',
+      isActive: true,
+    },
   ],
 };
 
 interface ShopCardProps {
   shop: Shop;
-  isActive: boolean;
+  /** Hub’s working shop (staff tab context), not the same as shop.isActive */
+  isSelectedShop: boolean;
   isMenuOpen: boolean;
-  onSelectShop: () => void;
   onToggleMenu: () => void;
   onOpenEdit: () => void;
   onOpenRemove: () => void;
+  onToggleShopActive: () => void;
 }
 
 interface ShopFormModalProps {
@@ -77,6 +94,16 @@ export function ShopStaffHubScreen() {
     [shops, activeShopId]
   );
 
+  useEffect(() => {
+    const current = shops.find((shop) => shop.shopId === activeShopId);
+    if (current && !current.isActive) {
+      const fallback = shops.find((shop) => shop.isActive);
+      if (fallback) {
+        setActiveShopId(fallback.shopId);
+      }
+    }
+  }, [shops, activeShopId]);
+
   const staffListForActiveShop = staffByShopId[activeShopId] ?? [];
 
   const handleStaffListChange = (nextList: StaffMember[]) => {
@@ -100,9 +127,11 @@ export function ShopStaffHubScreen() {
       return;
     }
     const newShopId = `shop-${Date.now()}`;
-    setShops((previous) => [...previous, { shopId: newShopId, ...input }]);
+    setShops((previous) => [
+      ...previous,
+      { shopId: newShopId, ...input, isActive: input.isActive ?? true },
+    ]);
     setStaffByShopId((previous) => ({ ...previous, [newShopId]: [] }));
-    setActiveShopId(newShopId);
   };
 
   const handleConfirmRemoveShop = () => {
@@ -118,7 +147,8 @@ export function ShopStaffHubScreen() {
     });
     if (activeShopId === removedId) {
       const remaining = shops.filter((shop) => shop.shopId !== removedId);
-      setActiveShopId(remaining[0]?.shopId ?? DEFAULT_SHOP_ID);
+      const nextActive = remaining.find((shop) => shop.isActive) ?? remaining[0];
+      setActiveShopId(nextActive?.shopId ?? DEFAULT_SHOP_ID);
     }
     setIsRemoveShopOpen(false);
     setSelectedShopForRemove(null);
@@ -142,7 +172,10 @@ export function ShopStaffHubScreen() {
           >
             <div className="min-w-0 flex-1">
               <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{t('business.active_shop')}</p>
-              <p className="truncate text-base font-semibold text-gray-900">{activeShop.shopName}</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="truncate text-base font-semibold text-gray-900">{activeShop.shopName}</p>
+                {!activeShop.isActive ? <StaffStatusBadge isActive={false} /> : null}
+              </div>
               <p className="truncate text-sm text-gray-500">{activeShop.address}</p>
             </div>
             <ChevronDown
@@ -165,11 +198,14 @@ export function ShopStaffHubScreen() {
                     setActiveShopId(shop.shopId);
                     setIsShopPickerOpen(false);
                   }}
-                  className={`flex w-full flex-col items-start px-4 py-3 text-left text-sm active:bg-gray-50 ${
+                  className={`flex w-full flex-col items-start gap-1 px-4 py-3 text-left text-sm active:bg-gray-50 ${
                     shop.shopId === activeShopId ? 'bg-green-50 font-medium text-green-900' : 'text-gray-800'
-                  }`}
+                  } ${!shop.isActive ? 'opacity-70' : ''}`}
                 >
-                  <span className="font-semibold">{shop.shopName}</span>
+                  <span className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">{shop.shopName}</span>
+                    {!shop.isActive ? <StaffStatusBadge isActive={false} /> : null}
+                  </span>
                   <span className="text-xs text-gray-500">{shop.phone}</span>
                 </button>
               ))}
@@ -211,6 +247,7 @@ export function ShopStaffHubScreen() {
       {hubTab === 'staff' ? (
         <div className="flex min-h-0 flex-1 flex-col">
           <StaffPanel
+            key={activeShopId}
             staffList={staffListForActiveShop}
             onStaffListChange={handleStaffListChange}
             activeShopName={activeShop.shopName}
@@ -221,7 +258,6 @@ export function ShopStaffHubScreen() {
           shops={shops}
           activeShopId={activeShopId}
           activeMenuShopId={activeMenuShopId}
-          onSelectShop={(shopId) => setActiveShopId(shopId)}
           onToggleMenu={(shopId) =>
             setActiveMenuShopId((current) => (current === shopId ? '' : shopId))
           }
@@ -238,6 +274,14 @@ export function ShopStaffHubScreen() {
             setActiveMenuShopId('');
             setSelectedShopForRemove(shop);
             setIsRemoveShopOpen(true);
+          }}
+          onToggleShopActive={(shop) => {
+            setActiveMenuShopId('');
+            setShops((previous) =>
+              previous.map((s) =>
+                s.shopId === shop.shopId ? { ...s, isActive: !s.isActive } : s
+              )
+            );
           }}
         />
       )}
@@ -270,22 +314,22 @@ interface ShopsTabContentProps {
   shops: Shop[];
   activeShopId: string;
   activeMenuShopId: string;
-  onSelectShop: (shopId: string) => void;
   onToggleMenu: (shopId: string) => void;
   onOpenAddShop: () => void;
   onOpenEditShop: (shop: Shop) => void;
   onOpenRemoveShop: (shop: Shop) => void;
+  onToggleShopActive: (shop: Shop) => void;
 }
 
 function ShopsTabContent({
   shops,
   activeShopId,
   activeMenuShopId,
-  onSelectShop,
   onToggleMenu,
   onOpenAddShop,
   onOpenEditShop,
   onOpenRemoveShop,
+  onToggleShopActive,
 }: ShopsTabContentProps) {
   const { t } = useTranslation();
   return (
@@ -304,12 +348,12 @@ function ShopsTabContent({
               <ShopCard
                 key={shop.shopId}
                 shop={shop}
-                isActive={shop.shopId === activeShopId}
+                isSelectedShop={shop.shopId === activeShopId}
                 isMenuOpen={activeMenuShopId === shop.shopId}
-                onSelectShop={() => onSelectShop(shop.shopId)}
                 onToggleMenu={() => onToggleMenu(shop.shopId)}
                 onOpenEdit={() => onOpenEditShop(shop)}
                 onOpenRemove={() => onOpenRemoveShop(shop)}
+                onToggleShopActive={() => onToggleShopActive(shop)}
               />
             ))}
           </div>
@@ -330,41 +374,50 @@ function ShopsTabContent({
 
 function ShopCard({
   shop,
-  isActive,
+  isSelectedShop,
   isMenuOpen,
-  onSelectShop,
   onToggleMenu,
   onOpenEdit,
   onOpenRemove,
+  onToggleShopActive,
 }: ShopCardProps) {
   const { t } = useTranslation();
+  const isShopEnabled = shop.isActive;
+
   return (
     <div
-      className={`relative rounded-xl border bg-white p-3 shadow-sm ${
-        isActive ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-100'
+      className={`relative rounded-xl border p-3 shadow-sm ${
+        isSelectedShop
+          ? isShopEnabled
+            ? 'border-green-500 bg-white ring-1 ring-green-500'
+            : 'border-amber-400 bg-white ring-1 ring-amber-300'
+          : isShopEnabled
+            ? 'border-gray-100 bg-white'
+            : 'border-gray-200 bg-gray-50/90 opacity-95'
       }`}
     >
-      <button
-        type="button"
-        onClick={onSelectShop}
-        className="flex w-full items-center gap-3 rounded-xl p-1 text-left active:bg-gray-50"
-      >
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800">
-          <Building2 className="h-6 w-6" />
-        </div>
+      <div className="flex w-full items-center gap-3 rounded-xl p-1 pr-12 text-left">
+        <HubListEntityIcon kind="shop" />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="truncate text-base font-semibold text-gray-900">{shop.shopName}</p>
-            {isActive ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <p
+              className={`truncate text-base font-semibold ${
+                isShopEnabled ? 'text-gray-900' : 'text-gray-600'
+              }`}
+            >
+              {shop.shopName}
+            </p>
+            <StaffStatusBadge isActive={isShopEnabled} />
+            {isSelectedShop ? (
               <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-                {t('common.active')}
+                {t('business.shop_current_badge')}
               </span>
             ) : null}
           </div>
           <p className="truncate text-sm text-gray-600">{shop.address}</p>
           <p className="text-sm text-gray-500">{shop.phone}</p>
         </div>
-      </button>
+      </div>
 
       <button
         type="button"
@@ -389,6 +442,13 @@ function ShopCard({
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 active:bg-gray-100"
           >
             {t('common.edit')}
+          </button>
+          <button
+            type="button"
+            onClick={onToggleShopActive}
+            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 active:bg-gray-100"
+          >
+            {isShopEnabled ? t('business.disable_shop') : t('business.activate_shop')}
           </button>
           <button
             type="button"
@@ -434,6 +494,7 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
               shopName: shopName.trim(),
               address: address.trim(),
               phone: phone.trim(),
+              isActive: initialShop ? initialShop.isActive : true,
             },
             initialShop?.shopId
           );
