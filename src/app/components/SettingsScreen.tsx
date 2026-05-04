@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { ChangePasswordScreen } from './ChangePasswordScreen';
 import { changeAppLanguage } from '../../i18n.js';
+import { useAuthStore } from '../authStore';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -62,6 +63,8 @@ interface PlaceholderModalProps {
  */
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { t, i18n } = useTranslation();
+  const shopName = useAuthStore((s) => s.shopName);
+  const logout = useAuthStore((s) => s.logout);
   const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [activePlaceholder, setActivePlaceholder] = useState<'' | 'profile' | 'shop' | 'plan'>('');
@@ -186,7 +189,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
             <SettingsItem
               icon={Store}
               title={t('settings.shop_info')}
-              subtitle="My Fresh Mart"
+              subtitle={shopName.trim() || t('settings.shop_info_subtitle_fallback')}
               onClick={() => handleOpenPlaceholder('shop')}
             />
           </SettingsCard>
@@ -227,7 +230,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         description={t('settings.logout_desc')}
         confirmLabel={t('settings.confirm_logout')}
         cancelLabel={t('common.cancel')}
-        onConfirm={() => setIsLogoutModalOpen(false)}
+        onConfirm={() => {
+          logout();
+          setIsLogoutModalOpen(false);
+        }}
         onCancel={() => setIsLogoutModalOpen(false)}
       />
 

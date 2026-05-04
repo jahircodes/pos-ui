@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore } from '../store';
+import { useAuthStore } from '../authStore';
 import { TrendingUp, IndianRupee, ShoppingBag, FileText } from 'lucide-react';
 import { getAppLocale } from '../../i18n.js';
 
@@ -18,7 +19,9 @@ function paymentMethodLabel(method: string, t: (key: string) => string) {
 
 export function Dashboard({ onNewSale, onViewProducts, onViewHistory }: DashboardProps) {
   const { t } = useTranslation();
+  const shopName = useAuthStore((s) => s.shopName);
   const transactions = useStore((state) => state.transactions);
+  const dashboardTitle = shopName.trim() || t('dashboard.title');
   const dateLocale = getAppLocale();
 
   const todaysSales = useMemo(() => {
@@ -62,7 +65,7 @@ export function Dashboard({ onNewSale, onViewProducts, onViewHistory }: Dashboar
   return (
     <div className="flex flex-col h-full bg-gray-50">
       <div className="p-4 bg-white border-b border-gray-200">
-        <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{dashboardTitle}</h1>
         <p className="text-sm text-gray-600">{t('dashboard.subtitle')}</p>
       </div>
 

@@ -9,12 +9,15 @@ import { ShopStaffHubScreen } from './components/ShopStaffHubScreen';
 import { SaleProductsHubScreen, type SaleProductsHubTab } from './components/SaleProductsHubScreen';
 import { SaleUndoBar } from './components/SaleUndoBar';
 import { useStore } from './store';
+import { useAuthStore } from './authStore';
+import { AuthFlow } from './components/AuthFlow';
 import { toast } from 'sonner';
 
 const UNDO_WINDOW_SECONDS = 10;
 
 export default function App() {
   const { t } = useTranslation();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const undoLastTransaction = useStore((s) => s.undoLastTransaction);
   const [activeTab, setActiveTab] = useState<
     'home' | 'shop' | 'history' | 'business' | 'settings'
@@ -88,6 +91,15 @@ export default function App() {
       setActiveTab('shop');
     }
   };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="size-full flex flex-col bg-gray-50">
+        <Toaster position="top-center" richColors />
+        <AuthFlow />
+      </div>
+    );
+  }
 
   return (
     <div className="size-full flex flex-col bg-gray-50">
