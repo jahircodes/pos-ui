@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useStore, Product } from '../store';
-import { Search, Plus, Minus, Trash2, Banknote, Smartphone } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, Banknote, Smartphone, ChevronUp, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { LiquidQuantityInput } from './LiquidQuantityInput';
 import { WeightQuantityInput } from './WeightQuantityInput';
@@ -22,6 +22,7 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
   const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
   const [isCashPaymentOpen, setIsCashPaymentOpen] = useState(false);
   const [isUpiPaymentOpen, setIsUpiPaymentOpen] = useState(false);
+  const [isCartCollapsed, setIsCartCollapsed] = useState(true);
   const products = useStore((state) => state.products);
   const cart = useStore((state) => state.cart);
   const updateCartQuantity = useStore((state) => state.updateCartQuantity);
@@ -190,54 +191,74 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
 
       {cart.length > 0 && (
         <div className="shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
-          <div className="max-h-48 overflow-y-auto p-4 space-y-2">
-            {cart.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex items-center justify-between gap-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">
-                    {item.product.name}
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    ₹{item.product.price} × {formatQuantityDisplay(item.quantity, item.product.unit)}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      const decrement = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
-                      updateCartQuantity(item.product.id, Math.max(decrement, item.quantity - decrement));
-                    }}
-                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <div className="min-w-16 text-center">
-                    <div className="font-semibold text-gray-900 text-sm">
-                      {formatQuantityDisplay(item.quantity, item.product.unit)}
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200">
+            <div className="font-semibold text-gray-900">
+              {t('sales.cart')} ({cart.length})
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsCartCollapsed((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-800 active:bg-gray-200"
+              aria-expanded={!isCartCollapsed}
+            >
+              {isCartCollapsed ? t('sales.show_items') : t('sales.hide_items')}
+              {isCartCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+          </div>
+
+          {!isCartCollapsed && (
+            <div className="max-h-48 overflow-y-auto p-4 space-y-2">
+              {cart.map((item) => (
+                <div
+                  key={item.product.id}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-gray-900 truncate">
+                      {item.product.name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      ₹{item.product.price} × {formatQuantityDisplay(item.quantity, item.product.unit)}
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      const increment = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
-                      updateCartQuantity(item.product.id, item.quantity + increment);
-                    }}
-                    className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => removeFromCart(item.product.id)}
-                    className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center active:bg-red-100"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const decrement = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
+                        updateCartQuantity(item.product.id, Math.max(decrement, item.quantity - decrement));
+                      }}
+                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <div className="min-w-16 text-center">
+                      <div className="font-semibold text-gray-900 text-sm">
+                        {formatQuantityDisplay(item.quantity, item.product.unit)}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const increment = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
+                        updateCartQuantity(item.product.id, item.quantity + increment);
+                      }}
+                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.product.id)}
+                      className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center active:bg-red-100"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="border-t border-gray-200 p-4 space-y-3">
             <div className="flex justify-between items-center">

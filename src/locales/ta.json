@@ -47,6 +47,9 @@
   },
   "sales": {
     "new_sale": "புதிய விற்பனை",
+    "cart": "கூடை",
+    "show_items": "பொருட்கள் காட்டு",
+    "hide_items": "பொருட்கள் மறை",
     "search_products": "பொருள் தேடு...",
     "no_products_found": "பொருள் இல்லை",
     "out_of_stock": "இருப்பு இல்லை",

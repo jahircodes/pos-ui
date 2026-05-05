@@ -47,6 +47,9 @@
   },
   "sales": {
     "new_sale": "New Sale",
+    "cart": "Cart",
+    "show_items": "Show items",
+    "hide_items": "Hide items",
     "search_products": "Search products...",
     "no_products_found": "No products found",
     "out_of_stock": "Out of stock",
