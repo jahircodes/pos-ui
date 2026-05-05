@@ -238,20 +238,23 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
 
           {!isCartCollapsed && (
             <div className="max-h-48 overflow-y-auto p-4 space-y-2">
-              {cart.map((item) => (
+              {cart.map((item) => {
+                const unitLabel = item.product.priceUnit || item.product.unit || t('sales.unit_item');
+                return (
                 <div
                   key={item.product.id}
-                  className="flex items-center justify-between gap-3"
+                  className="grid grid-cols-[1fr_auto_5rem] items-center gap-3"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-gray-900 truncate">
                       {item.product.name}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      ₹{item.product.price} × {formatQuantityDisplay(item.quantity, item.product.unit)}
+                    <div className="mt-0.5 text-sm text-gray-600 truncate">
+                      ₹{item.product.price} / {unitLabel}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="grid grid-cols-[2rem_4.25rem_2rem_2rem] items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -262,8 +265,8 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
                     >
                       <Minus className="w-4 h-4" />
                     </button>
-                    <div className="min-w-16 text-center">
-                      <div className="font-semibold text-gray-900 text-sm">
+                    <div className="text-center">
+                      <div className="font-semibold text-gray-900 text-sm tabular-nums">
                         {formatQuantityDisplay(item.quantity, item.product.unit)}
                       </div>
                     </div>
@@ -285,8 +288,13 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
+
+                  <div className="shrink-0 text-right font-semibold text-gray-900 tabular-nums">
+                    ₹{(item.product.price * item.quantity).toFixed(0)}
+                  </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
