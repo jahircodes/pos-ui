@@ -10,6 +10,7 @@ import { formatQuantityDisplay } from '../utils/formatWeight';
 import { ListLoadMoreFooter, LOAD_MORE_CHUNK } from './ListLoadMoreFooter';
 import { CashPaymentSheet } from './CashPaymentSheet';
 import { UpiPaymentSheet } from './UpiPaymentSheet';
+import { ConfirmationModal } from './SettingsScreen';
 
 interface SaleScreenProps {
   onComplete: () => void;
@@ -23,10 +24,12 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
   const [isCashPaymentOpen, setIsCashPaymentOpen] = useState(false);
   const [isUpiPaymentOpen, setIsUpiPaymentOpen] = useState(false);
   const [isCartCollapsed, setIsCartCollapsed] = useState(true);
+  const [isClearCartConfirmOpen, setIsClearCartConfirmOpen] = useState(false);
   const products = useStore((state) => state.products);
   const cart = useStore((state) => state.cart);
   const updateCartQuantity = useStore((state) => state.updateCartQuantity);
   const removeFromCart = useStore((state) => state.removeFromCart);
+  const clearCart = useStore((state) => state.clearCart);
   const completeSale = useStore((state) => state.completeSale);
 
   const getStockStatus = useCallback(
@@ -100,6 +103,23 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
   const handleConfirmUpiSale = () => {
     handleCompleteSale('upi');
     setIsUpiPaymentOpen(false);
+  };
+
+  const handleClearCart = () => {
+    if (cart.length === 0) {
+      return;
+    }
+    setIsClearCartConfirmOpen(true);
+  };
+
+  const handleConfirmClearCart = () => {
+    clearCart();
+    setIsClearCartConfirmOpen(false);
+    toast.success(t('sales.toast_cart_cleared'));
+  };
+
+  const handleCancelClearCart = () => {
+    setIsClearCartConfirmOpen(false);
   };
 
   const handleAddToCart = (product: Product) => {
@@ -195,15 +215,25 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
             <div className="font-semibold text-gray-900">
               {t('sales.cart')} ({cart.length})
             </div>
-            <button
-              type="button"
-              onClick={() => setIsCartCollapsed((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-800 active:bg-gray-200"
-              aria-expanded={!isCartCollapsed}
-            >
-              {isCartCollapsed ? t('sales.show_items') : t('sales.hide_items')}
-              {isCartCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleClearCart}
+                className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 active:bg-red-100"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('sales.clear_cart')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCartCollapsed((v) => !v)}
+                className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-800 active:bg-gray-200"
+                aria-expanded={!isCartCollapsed}
+              >
+                {isCartCollapsed ? t('sales.show_items') : t('sales.hide_items')}
+                {isCartCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           {!isCartCollapsed && (
@@ -331,6 +361,16 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
           onConfirm={handleConfirmUpiSale}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={isClearCartConfirmOpen}
+        title={t('sales.clear_cart')}
+        description={t('sales.confirm_clear_cart')}
+        confirmLabel={t('common.confirm')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={handleConfirmClearCart}
+        onCancel={handleCancelClearCart}
+      />
     </div>
   );
 }
