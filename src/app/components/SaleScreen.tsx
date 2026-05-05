@@ -61,6 +61,15 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
     setVisibleProductCount(LOAD_MORE_CHUNK);
   }, [searchQuery]);
 
+  useEffect(() => {
+    if (cart.length === 0) {
+      setIsCartCollapsed(true);
+      setIsClearCartConfirmOpen(false);
+      setIsCashPaymentOpen(false);
+      setIsUpiPaymentOpen(false);
+    }
+  }, [cart.length]);
+
   const handleLoadMoreProducts = () => {
     setVisibleProductCount((n) => n + LOAD_MORE_CHUNK);
   };
@@ -210,122 +219,146 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
       </div>
 
       {cart.length > 0 && (
-        <div className="shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200">
-            <div className="font-semibold text-gray-900">
-              {t('sales.cart')} ({cart.length})
-            </div>
-            <div className="flex items-center gap-2">
+        <>
+          {isCartCollapsed ? (
+            <div className="shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)] px-4 py-3">
               <button
                 type="button"
-                onClick={handleClearCart}
-                className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 active:bg-red-100"
+                onClick={() => setIsCartCollapsed(false)}
+                className="w-full flex items-center justify-between rounded-xl bg-gray-100 px-4 py-3 active:bg-gray-200"
+                aria-expanded={false}
               >
-                <Trash2 className="w-4 h-4" />
-                {t('sales.clear_cart')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsCartCollapsed((v) => !v)}
-                className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-800 active:bg-gray-200"
-                aria-expanded={!isCartCollapsed}
-              >
-                {isCartCollapsed ? t('sales.show_items') : t('sales.hide_items')}
-                {isCartCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          {!isCartCollapsed && (
-            <div className="max-h-48 overflow-y-auto p-4 space-y-2">
-              {cart.map((item) => {
-                const unitLabel = item.product.priceUnit || item.product.unit || t('sales.unit_item');
-                return (
-                <div
-                  key={item.product.id}
-                  className="grid grid-cols-[1fr_auto_5rem] items-center gap-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-gray-900 truncate">
-                      {item.product.name}
-                    </div>
-                    <div className="mt-0.5 text-sm text-gray-600 truncate">
-                      ₹{item.product.price} / {unitLabel}
-                    </div>
+                <div className="min-w-0 text-left">
+                  <div className="font-semibold text-gray-900 truncate">
+                    {t('sales.cart')} ({cart.length})
                   </div>
-
-                  <div className="grid grid-cols-[2rem_4.25rem_2rem_2rem] items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const decrement = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
-                        updateCartQuantity(item.product.id, Math.max(decrement, item.quantity - decrement));
-                      }}
-                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
-                    >
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <div className="text-center">
-                      <div className="font-semibold text-gray-900 text-sm tabular-nums">
-                        {formatQuantityDisplay(item.quantity, item.product.unit)}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const increment = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
-                        updateCartQuantity(item.product.id, item.quantity + increment);
-                      }}
-                      className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeFromCart(item.product.id)}
-                      className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center active:bg-red-100"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="shrink-0 text-right font-semibold text-gray-900 tabular-nums">
-                    ₹{(item.product.price * item.quantity).toFixed(0)}
+                  <div className="text-sm text-gray-600">
+                    {t('common.total')}: ₹{cartTotal.toFixed(2)}
                   </div>
                 </div>
-                );
-              })}
+                <div className="shrink-0 inline-flex items-center gap-1 text-sm font-semibold text-gray-800">
+                  {t('sales.show_items')}
+                  <ChevronUp className="w-4 h-4" />
+                </div>
+              </button>
+            </div>
+          ) : (
+            <div className="shrink-0 bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-200">
+                <div className="font-semibold text-gray-900">
+                  {t('sales.cart')} ({cart.length})
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClearCart}
+                    className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700 active:bg-red-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    {t('sales.clear_cart')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsCartCollapsed(true)}
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-semibold text-gray-800 active:bg-gray-200"
+                    aria-expanded
+                  >
+                    {t('sales.hide_items')}
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-48 overflow-y-auto p-4 space-y-2">
+                {cart.map((item) => {
+                  const unitLabel = item.product.priceUnit || item.product.unit || t('sales.unit_item');
+                  return (
+                    <div
+                      key={item.product.id}
+                      className="grid grid-cols-[1fr_auto_5rem] items-center gap-3"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">
+                          {item.product.name}
+                        </div>
+                        <div className="mt-0.5 text-sm text-gray-600 truncate">
+                          ₹{item.product.price} / {unitLabel}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-[2rem_4.25rem_2rem_2rem] items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const decrement = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
+                            updateCartQuantity(item.product.id, Math.max(decrement, item.quantity - decrement));
+                          }}
+                          className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <div className="text-center">
+                          <div className="font-semibold text-gray-900 text-sm tabular-nums">
+                            {formatQuantityDisplay(item.quantity, item.product.unit)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const increment = (item.product.unit === 'kg' || item.product.unit === 'litre') ? 0.25 : 1;
+                            updateCartQuantity(item.product.id, item.quantity + increment);
+                          }}
+                          className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeFromCart(item.product.id)}
+                          className="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center active:bg-red-100"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="shrink-0 text-right font-semibold text-gray-900 tabular-nums">
+                        ₹{(item.product.price * item.quantity).toFixed(0)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="border-t border-gray-200 p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-semibold text-gray-900">{t('common.total')}</span>
+                  <span className="text-2xl font-bold text-green-600">
+                    ₹{cartTotal.toFixed(2)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleOpenCashPayment}
+                    className="bg-green-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-green-700 transition-colors"
+                  >
+                    <Banknote className="w-5 h-5" />
+                    {t('sales.cash')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleOpenUpiPayment}
+                    className="bg-blue-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
+                  >
+                    <Smartphone className="w-5 h-5" />
+                    {t('sales.upi')}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
-
-          <div className="border-t border-gray-200 p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-lg font-semibold text-gray-900">{t('common.total')}</span>
-              <span className="text-2xl font-bold text-green-600">
-                ₹{cartTotal.toFixed(2)}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={handleOpenCashPayment}
-                className="bg-green-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-green-700 transition-colors"
-              >
-                <Banknote className="w-5 h-5" />
-                {t('sales.cash')}
-              </button>
-              <button
-                type="button"
-                onClick={handleOpenUpiPayment}
-                className="bg-blue-600 text-white rounded-xl py-3 font-semibold flex items-center justify-center gap-2 active:bg-blue-700 transition-colors"
-              >
-                <Smartphone className="w-5 h-5" />
-                {t('sales.upi')}
-              </button>
-            </div>
-          </div>
-        </div>
+        </>
       )}
 
       {selectedProduct && selectedProduct.unit === 'litre' && (
