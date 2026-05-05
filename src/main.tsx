@@ -3,6 +3,7 @@ import './i18n.js';
 import App from './app/App.tsx';
 import { PlatformDashboard } from './app/components/platform/PlatformDashboard.tsx';
 import './styles/index.css';
+import React from 'react';
 
 const hash = window.location.hash.replace(/^#\/?/, '');
 const showPlatformDashboard =
