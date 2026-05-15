@@ -7,6 +7,7 @@ import { LiquidQuantityInput } from './LiquidQuantityInput';
 import { WeightQuantityInput } from './WeightQuantityInput';
 import { QuantityModal } from './QuantityModal';
 import { formatQuantityDisplay } from '../utils/formatWeight';
+import { getStockLevel } from '../utils/stockStatus';
 import { ListLoadMoreFooter, LOAD_MORE_CHUNK } from './ListLoadMoreFooter';
 import { CashPaymentSheet } from './CashPaymentSheet';
 import { UpiPaymentSheet } from './UpiPaymentSheet';
@@ -34,10 +35,11 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
 
   const getStockStatus = useCallback(
     (product: Product) => {
-      if (product.stock === 0) {
+      const level = getStockLevel(product);
+      if (level === 'out') {
         return { text: t('sales.out_of_stock'), color: 'text-red-600', dot: '🔴' };
       }
-      if (product.stock < 10) {
+      if (level === 'low') {
         return { text: t('sales.low_stock'), color: 'text-orange-500', dot: '🟡' };
       }
       return { text: t('sales.in_stock'), color: 'text-green-600', dot: '🟢' };
@@ -176,7 +178,7 @@ export function SaleScreen({ onComplete }: SaleScreenProps) {
             <div className="grid grid-cols-2 gap-2 sm:gap-3">
               {visibleProducts.map((product) => {
                 const status = getStockStatus(product);
-                const isOutOfStock = product.stock === 0;
+                const isOutOfStock = getStockLevel(product) === 'out';
                 const unitLabel = product.priceUnit || product.unit || t('sales.unit_item');
 
                 return (

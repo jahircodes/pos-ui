@@ -33,7 +33,8 @@
     "title": "Products",
     "subtitle": "Sell and manage your inventory.",
     "tab_sell": "Sell",
-    "tab_inventory": "Inventory"
+    "tab_inventory": "Inventory",
+    "tab_alerts": "Alerts"
   },
   "dashboard": {
     "title": "My Shop",
@@ -113,6 +114,9 @@
     "low_stock": "Low stock",
     "out_of_stock": "Out of stock",
     "hint_low_tab": "Stock below 10, excluding out of stock.",
+    "hint_low_tab_min": "Below each product's minimum stock level.",
+    "field_min_stock": "Min stock alert",
+    "toast_invalid_min_stock": "Enter a valid minimum stock level",
     "hint_out_tab": "Items with zero stock.",
     "empty_all": "No products found",
     "empty_low": "No low-stock products",
@@ -155,6 +159,9 @@
     "toast_product_added": "Product added successfully"
   },
   "history": {
+    "hub_title": "History",
+    "tab_sales": "Sales",
+    "tab_stock": "Stock",
     "title": "Sales History",
     "aria_export": "Export report",
     "filter_today": "Today",
@@ -315,5 +322,48 @@
     "disable_staff": "Disable",
     "activate_staff": "Activate",
     "aria_staff_actions": "Open staff actions"
+  },
+  "stock": {
+    "type_in": "Stock in",
+    "type_out": "Stock out",
+    "type_adjustment": "Set count",
+    "record_movement": "Record stock movement",
+    "field_quantity": "Quantity",
+    "field_new_stock_level": "New stock level",
+    "field_reason": "Reason (optional)",
+    "placeholder_reason": "e.g. Supplier delivery, damaged goods",
+    "view_history": "History",
+    "history_all": "Stock movements",
+    "history_product": "{{name}} — movements",
+    "history_all_hint": "All stock changes for this shop",
+    "history_product_hint": "IN, OUT, and adjustments for this product",
+    "history_empty": "No stock movements yet",
+    "balance_after": "Balance: {{value}}",
+    "reason_initial": "Initial stock",
+    "reason_sale": "Sale",
+    "reason_sale_undone": "Sale undone",
+    "toast_movement_recorded": "Stock movement saved",
+    "toast_movement_failed": "Could not save stock movement"
+  },
+  "alerts": {
+    "dashboard_title": "Stock alerts",
+    "dashboard_summary": "{{low}} low · {{out}} out of stock",
+    "dashboard_hint": "Tap to review and restock",
+    "badge_low_short": "low",
+    "badge_out_short": "out",
+    "chip_low": "Low",
+    "chip_out": "Out",
+    "more_count": "+{{count}} more",
+    "view_all": "View all",
+    "screen_title": "Stock alerts",
+    "screen_subtitle": "Items that need restocking or attention",
+    "screen_empty_hint": "When stock runs low or runs out, alerts will show here.",
+    "sheet_title": "Stock alerts",
+    "sheet_subtitle": "Low stock and out-of-stock items need attention",
+    "sheet_empty": "No pending alerts",
+    "type_low": "Low stock",
+    "type_out": "Out of stock",
+    "action_view_product": "View product",
+    "action_dismiss": "Dismiss"
   }
 }

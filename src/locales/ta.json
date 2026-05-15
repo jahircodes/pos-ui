@@ -33,7 +33,8 @@
     "title": "பொருள்கள்",
     "subtitle": "விற்பனை மற்றும் இருப்பு.",
     "tab_sell": "விற்பனை",
-    "tab_inventory": "இருப்பு"
+    "tab_inventory": "இருப்பு",
+    "tab_alerts": "எச்சரிக்கை"
   },
   "dashboard": {
     "title": "என் கடை",
@@ -113,6 +114,9 @@
     "low_stock": "குறைந்த இருப்பு",
     "out_of_stock": "இருப்பு இல்லை",
     "hint_low_tab": "10க்கு கீழ், இருப்பு இல்லாதது தவிர.",
+    "hint_low_tab_min": "ஒவ்வொரு பொருளின் குறைந்தபட்ச இருப்புக்கு கீழ்.",
+    "field_min_stock": "குறைந்தபட்ச இருப்பு எச்சரிக்கை",
+    "toast_invalid_min_stock": "சரியான குறைந்தபட்ச இருப்பு உள்ளிடவும்",
     "hint_out_tab": "இருப்பு பூஜ்ஜியம்.",
     "empty_all": "பொருள் இல்லை",
     "empty_low": "குறைந்த இருப்பு இல்லை",
@@ -155,6 +159,9 @@
     "toast_product_added": "பொருள் சேர்க்கப்பட்டது"
   },
   "history": {
+    "hub_title": "வரலாறு",
+    "tab_sales": "விற்பனை",
+    "tab_stock": "இருப்பு",
     "title": "விற்பனை வரலாறு",
     "aria_export": "அறிக்கை ஏற்றுமதி",
     "filter_today": "இன்று",
@@ -315,5 +322,48 @@
     "disable_staff": "முடக்கு",
     "activate_staff": "இயக்கு",
     "aria_staff_actions": "ஊழியர் செயல்கள்"
+  },
+  "stock": {
+    "type_in": "இருப்பு சேர்",
+    "type_out": "இருப்பு குறை",
+    "type_adjustment": "எண்ணிக்கை அமை",
+    "record_movement": "இருப்பு மாற்றம் பதிவு",
+    "field_quantity": "அளவு",
+    "field_new_stock_level": "புதிய இருப்பு",
+    "field_reason": "காரணம் (விரும்பினால்)",
+    "placeholder_reason": "எ.கா விநியோகம், சேதம்",
+    "view_history": "வரலாறு",
+    "history_all": "இருப்பு நகர்வுகள்",
+    "history_product": "{{name}} — நகர்வுகள்",
+    "history_all_hint": "கடையின் அனைத்து இருப்பு மாற்றங்கள்",
+    "history_product_hint": "இந்த பொருளுக்கான IN, OUT, சரிசெய்தல்",
+    "history_empty": "இன்னும் இருப்பு நகர்வு இல்லை",
+    "balance_after": "மீதி: {{value}}",
+    "reason_initial": "தொடக்க இருப்பு",
+    "reason_sale": "விற்பனை",
+    "reason_sale_undone": "விற்பனை ரத்து",
+    "toast_movement_recorded": "இருப்பு மாற்றம் சேமிக்கப்பட்டது",
+    "toast_movement_failed": "இருப்பு மாற்றம் சேமிக்க முடியவில்லை"
+  },
+  "alerts": {
+    "dashboard_title": "இருப்பு எச்சரிக்கைகள்",
+    "dashboard_summary": "{{low}} குறைவு · {{out}} இல்லை",
+    "dashboard_hint": "பார்க்கவும் இருப்பு நிரப்பவும்",
+    "badge_low_short": "குறைவு",
+    "badge_out_short": "இல்லை",
+    "chip_low": "குறைவு",
+    "chip_out": "இல்லை",
+    "more_count": "+{{count}} மேலும்",
+    "view_all": "அனைத்தும்",
+    "screen_title": "இருப்பு எச்சரிக்கைகள்",
+    "screen_subtitle": "இருப்பு குறைவு அல்லது இல்லாத பொருட்கள்",
+    "screen_empty_hint": "இருப்பு குறையும்போது எச்சரிக்கைகள் இங்கே தோன்றும்.",
+    "sheet_title": "இருப்பு எச்சரிக்கைகள்",
+    "sheet_subtitle": "குறைந்த மற்றும் இல்லாத இருப்பு கவனிக்கவும்",
+    "sheet_empty": "நிலுவை எச்சரிக்கை இல்லை",
+    "type_low": "குறைந்த இருப்பு",
+    "type_out": "இருப்பு இல்லை",
+    "action_view_product": "பொருள் பார்",
+    "action_dismiss": "நிராகரி"
   }
 }

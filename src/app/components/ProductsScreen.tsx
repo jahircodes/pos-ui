@@ -7,10 +7,20 @@ import { ProductModal } from './ProductModal';
 import { formatQuantityDisplay } from '../utils/formatWeight';
 import { ListLoadMoreFooter, LOAD_MORE_CHUNK } from './ListLoadMoreFooter';
 import { applyInventoryRows, parseInventoryCsv } from '../utils/inventoryCsv';
+import { getStockLevel } from '../utils/stockStatus';
+import type { InventoryFocus } from './Dashboard';
 
 type StockFilterTab = 'all' | 'low' | 'out';
 
-export function ProductsScreen() {
+interface ProductsScreenProps {
+  inventoryFocus?: InventoryFocus | null;
+  onInventoryFocusConsumed?: () => void;
+}
+
+export function ProductsScreen({
+  inventoryFocus,
+  onInventoryFocusConsumed,
+}: ProductsScreenProps) {
   const { t } = useTranslation();
   const products = useStore((state) => state.products);
   const deleteProduct = useStore((state) => state.deleteProduct);
@@ -22,15 +32,28 @@ export function ProductsScreen() {
   const [visibleProductCount, setVisibleProductCount] = useState(LOAD_MORE_CHUNK);
   const inventoryFileInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    if (!inventoryFocus) return;
+    if (inventoryFocus.stockFilter) {
+      setStockFilterTab(inventoryFocus.stockFilter);
+    }
+    if (inventoryFocus.productId) {
+      const product = products.find((p) => p.id === inventoryFocus.productId);
+      if (product) {
+        setEditingProduct(product);
+        setIsModalOpen(true);
+      }
+    }
+    onInventoryFocusConsumed?.();
+  }, [inventoryFocus, products, onInventoryFocusConsumed]);
+
   const stockFilterCounts = useMemo(() => {
     let lowStockCount = 0;
     let outOfStockCount = 0;
     for (const product of products) {
-      if (product.stock === 0) {
-        outOfStockCount += 1;
-      } else if (product.stock < 10) {
-        lowStockCount += 1;
-      }
+      const level = getStockLevel(product);
+      if (level === 'out') outOfStockCount += 1;
+      else if (level === 'low') lowStockCount += 1;
     }
     return { lowStockCount, outOfStockCount };
   }, [products]);
@@ -38,12 +61,13 @@ export function ProductsScreen() {
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const level = getStockLevel(product);
       const matchesStockFilter =
         stockFilterTab === 'all'
           ? true
           : stockFilterTab === 'low'
-            ? product.stock > 0 && product.stock < 10
-            : product.stock === 0;
+            ? level === 'low'
+            : level === 'out';
       return matchesSearch && matchesStockFilter;
     });
   }, [products, searchQuery, stockFilterTab]);
@@ -85,16 +109,25 @@ export function ProductsScreen() {
 
   const getStockStatus = useCallback(
     (product: Product) => {
-      if (product.stock === 0) {
+      const level = getStockLevel(product);
+      if (level === 'out') {
         return { text: t('inventory.out_of_stock_status'), color: 'text-red-600', dot: '🔴' };
       }
-      if (product.stock < 10) {
+      if (level === 'low') {
         return { text: t('inventory.low_stock_status'), color: 'text-orange-500', dot: '🟡' };
       }
       return { text: t('inventory.in_stock_status'), color: 'text-green-600', dot: '🟢' };
     },
     [t],
   );
+
+  const handleOpenProductFromAlert = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    if (product) {
+      setEditingProduct(product);
+      setIsModalOpen(true);
+    }
+  };
 
   const handleInventoryUploadClick = () => {
     inventoryFileInputRef.current?.click();
@@ -174,7 +207,7 @@ export function ProductsScreen() {
   return (
     <div className="flex flex-col h-full min-h-0 bg-gray-50 pb-16">
       <div className="shrink-0 p-4 bg-white border-b border-gray-200">
-        <h1 className="text-xl font-bold text-gray-900 mb-3">{t('inventory.title')}</h1>
+        <h1 className="mb-3 text-xl font-bold text-gray-900">{t('inventory.title')}</h1>
         <div className="flex items-stretch gap-2">
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
@@ -239,7 +272,7 @@ export function ProductsScreen() {
             })}
           </div>
           {stockFilterTab === 'low' ? (
-            <p className="mt-1.5 text-xs text-gray-500">{t('inventory.hint_low_tab')}</p>
+            <p className="mt-1.5 text-xs text-gray-500">{t('inventory.hint_low_tab_min')}</p>
           ) : null}
           {stockFilterTab === 'out' ? (
             <p className="mt-1.5 text-xs text-gray-500">{t('inventory.hint_out_tab')}</p>
@@ -333,25 +366,47 @@ export function ProductsScreen() {
             <p className="mt-2 text-sm text-gray-600">
               {t('inventory.delete_confirm', { name: productPendingDelete.name })}
             </p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setProductPendingDelete(null)}
-                className="rounded-xl border border-gray-200 py-3 font-semibold text-gray-700 active:bg-gray-50"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmDelete}
-                className="rounded-xl bg-red-500 py-3 font-semibold text-white active:bg-red-600"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
+            <DeleteActions
+              onCancel={() => setProductPendingDelete(null)}
+              onConfirm={handleConfirmDelete}
+              cancelLabel={t('common.cancel')}
+              deleteLabel={t('common.delete')}
+            />
           </div>
         </div>
       )}
+
+    </div>
+  );
+}
+
+function DeleteActions({
+  onCancel,
+  onConfirm,
+  cancelLabel,
+  deleteLabel,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+  cancelLabel: string;
+  deleteLabel: string;
+}) {
+  return (
+    <div className="mt-4 grid grid-cols-2 gap-3">
+      <button
+        type="button"
+        onClick={onCancel}
+        className="rounded-xl border border-gray-200 py-3 font-semibold text-gray-700 active:bg-gray-50"
+      >
+        {cancelLabel}
+      </button>
+      <button
+        type="button"
+        onClick={onConfirm}
+        className="rounded-xl bg-red-500 py-3 font-semibold text-white active:bg-red-600"
+      >
+        {deleteLabel}
+      </button>
     </div>
   );
 }

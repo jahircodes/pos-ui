@@ -1,5 +1,5 @@
 /**
- * Sales history with Today / This week / This month / Custom filters, export (UI-only), and invoice detail.
+ * History hub: sales ledger and stock movements in separate tabs.
  */
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -7,9 +7,16 @@ import { useStore, Transaction } from '../store';
 import { Download, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { InvoiceModal } from './InvoiceModal';
+import { StockMovementPanel } from './StockMovementPanel';
 import { getAppLocale } from '../../i18n.js';
 
+export type HistoryHubTab = 'sales' | 'stock';
+
 type HistoryFilter = 'today' | 'week' | 'month' | 'custom';
+
+interface HistoryScreenProps {
+  onOpenProduct?: (productId: string) => void;
+}
 
 function toDateInputValue(d: Date): string {
   const y = d.getFullYear();
@@ -53,7 +60,75 @@ function paymentLabel(method: string, t: (key: string) => string) {
   return method;
 }
 
-export function HistoryScreen() {
+export function HistoryScreen({ onOpenProduct }: HistoryScreenProps) {
+  const { t } = useTranslation();
+  const [hubTab, setHubTab] = useState<HistoryHubTab>('sales');
+
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-gray-50 pb-16">
+      <div className="shrink-0 border-b border-gray-200 bg-white">
+        <HistoryHubHeader t={t} />
+        <HistoryHubTabs hubTab={hubTab} onHubTabChange={setHubTab} t={t} />
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        {hubTab === 'sales' ? (
+          <SalesHistoryPanel />
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4">
+            <StockMovementPanel onOpenProduct={onOpenProduct} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HistoryHubHeader({ t }: { t: (key: string) => string }) {
+  return (
+    <div className="p-4 pb-3">
+      <h1 className="text-xl font-bold text-gray-900">{t('history.hub_title')}</h1>
+    </div>
+  );
+}
+
+function HistoryHubTabs({
+  hubTab,
+  onHubTabChange,
+  t,
+}: {
+  hubTab: HistoryHubTab;
+  onHubTabChange: (tab: HistoryHubTab) => void;
+  t: (key: string) => string;
+}) {
+  return (
+    <div className="flex gap-1 px-4 pb-4">
+      <button
+        type="button"
+        onClick={() => onHubTabChange('sales')}
+        className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${
+          hubTab === 'sales'
+            ? 'bg-green-600 text-white shadow-sm'
+            : 'bg-gray-100 text-gray-600 active:bg-gray-200'
+        }`}
+      >
+        {t('history.tab_sales')}
+      </button>
+      <button
+        type="button"
+        onClick={() => onHubTabChange('stock')}
+        className={`flex-1 rounded-xl py-2.5 text-sm font-semibold ${
+          hubTab === 'stock'
+            ? 'bg-green-600 text-white shadow-sm'
+            : 'bg-gray-100 text-gray-600 active:bg-gray-200'
+        }`}
+      >
+        {t('history.tab_stock')}
+      </button>
+    </div>
+  );
+}
+
+function SalesHistoryPanel() {
   const { t, i18n } = useTranslation();
   const transactions = useStore((state) => state.transactions);
   const dateLocale = getAppLocale();
@@ -163,10 +238,9 @@ export function HistoryScreen() {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-gray-50 pb-16">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="shrink-0 border-b border-gray-200 bg-white p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h1 className="text-xl font-bold text-gray-900">{t('history.title')}</h1>
+        <div className="mb-3 flex items-center justify-end">
           <button
             type="button"
             onClick={() => setIsExportSheetOpen(true)}
@@ -360,12 +434,12 @@ export function HistoryScreen() {
         </div>
       )}
 
-      {selectedTransaction && (
+      {selectedTransaction ? (
         <InvoiceModal
           transaction={selectedTransaction}
           onClose={() => setSelectedTransaction(null)}
         />
-      )}
+      ) : null}
     </div>
   );
 }

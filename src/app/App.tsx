@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Toaster } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { BottomNav } from './components/BottomNav';
-import { Dashboard } from './components/Dashboard';
+import { Dashboard, type InventoryFocus } from './components/Dashboard';
 import { HistoryScreen } from './components/HistoryScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { ShopStaffHubScreen } from './components/ShopStaffHubScreen';
@@ -23,6 +23,7 @@ export default function App() {
     'home' | 'shop' | 'history' | 'business' | 'settings'
   >('home');
   const [shopHubTab, setShopHubTab] = useState<SaleProductsHubTab>('sell');
+  const [inventoryFocus, setInventoryFocus] = useState<InventoryFocus | null>(null);
   const [isUndoBarVisible, setIsUndoBarVisible] = useState(false);
   const [undoSecondsLeft, setUndoSecondsLeft] = useState(UNDO_WINDOW_SECONDS);
   const undoIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -72,7 +73,31 @@ export default function App() {
     setActiveTab('shop');
   };
 
-  const handleViewProducts = () => {
+  const handleViewProducts = (focus?: InventoryFocus) => {
+    setInventoryFocus(focus ?? null);
+    setShopHubTab('inventory');
+    setActiveTab('shop');
+  };
+
+  const handleViewAlerts = () => {
+    setActiveTab('shop');
+    setShopHubTab('alerts');
+  };
+
+  const handleOpenProductFromAlert = (productId: string) => {
+    const alert = useStore.getState().stockAlerts.find(
+      (a) => a.productId === productId && a.status === 'PENDING',
+    );
+    setInventoryFocus({
+      productId,
+      stockFilter: alert?.type === 'OUT_OF_STOCK' ? 'out' : 'low',
+    });
+    setShopHubTab('inventory');
+    setActiveTab('shop');
+  };
+
+  const handleOpenProductFromHistory = (productId: string) => {
+    setInventoryFocus({ productId });
     setShopHubTab('inventory');
     setActiveTab('shop');
   };
@@ -110,6 +135,7 @@ export default function App() {
           <Dashboard
             onNewSale={handleNewSale}
             onViewProducts={handleViewProducts}
+            onViewAlerts={handleViewAlerts}
             onViewHistory={() => setActiveTab('history')}
           />
         )}
@@ -118,9 +144,14 @@ export default function App() {
             hubTab={shopHubTab}
             onHubTabChange={setShopHubTab}
             onSaleComplete={handleSaleComplete}
+            inventoryFocus={inventoryFocus}
+            onInventoryFocusConsumed={() => setInventoryFocus(null)}
+            onOpenProductFromAlert={handleOpenProductFromAlert}
           />
         )}
-        {activeTab === 'history' && <HistoryScreen />}
+        {activeTab === 'history' && (
+          <HistoryScreen onOpenProduct={handleOpenProductFromHistory} />
+        )}
         {activeTab === 'business' && <ShopStaffHubScreen />}
         {activeTab === 'settings' && <SettingsScreen />}
       </div>
