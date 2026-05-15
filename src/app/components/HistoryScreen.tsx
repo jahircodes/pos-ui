@@ -238,34 +238,35 @@ function SalesHistoryPanel() {
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="shrink-0 border-b border-gray-200 bg-white p-4">
-        <div className="mb-3 flex items-center justify-end">
+        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
+          <div className="min-w-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="inline-flex gap-2 pr-1">
+              {filterChips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => handleFilterChipClick(chip.id)}
+                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                    filter === chip.id
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 active:bg-gray-200'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             type="button"
             onClick={() => setIsExportSheetOpen(true)}
             aria-label={t('history.aria_export')}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-green-700 active:bg-gray-100"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50 text-green-700 active:bg-gray-100"
           >
             <Download className="h-5 w-5" />
           </button>
-        </div>
-
-        <div className="-mx-1 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {filterChips.map((chip) => (
-            <button
-              key={chip.id}
-              type="button"
-              onClick={() => handleFilterChipClick(chip.id)}
-              className={`shrink-0 rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
-                filter === chip.id
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 active:bg-gray-200'
-              }`}
-            >
-              {chip.label}
-            </button>
-          ))}
         </div>
       </div>
 
