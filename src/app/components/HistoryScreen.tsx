@@ -240,15 +240,15 @@ function SalesHistoryPanel() {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="shrink-0 border-b border-gray-200 bg-white p-4">
-        <div className="flex min-w-0 items-center gap-2 overflow-hidden">
-          <div className="min-w-0 flex-1 touch-pan-x overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div className="inline-flex gap-2 pr-1">
+        <div className="flex min-w-0 items-stretch gap-2">
+          <div className="min-w-0 flex-1" role="group" aria-label={t('history.title')}>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
               {filterChips.map((chip) => (
                 <button
                   key={chip.id}
                   type="button"
                   onClick={() => handleFilterChipClick(chip.id)}
-                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
+                  className={`inline-flex shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
                     filter === chip.id
                       ? 'bg-green-600 text-white'
                       : 'bg-gray-100 text-gray-700 active:bg-gray-200'
