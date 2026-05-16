@@ -15,6 +15,13 @@ interface ProductModalProps {
 
 const MOVEMENT_TYPES: StockMovementType[] = ['IN', 'OUT', 'ADJUSTMENT'];
 
+/** Display label for price per unit, derived from unit type. */
+function getPriceUnitFromUnit(unit: 'kg' | 'litre' | 'piece'): string {
+  if (unit === 'kg') return 'KG';
+  if (unit === 'litre') return 'L';
+  return 'PCS';
+}
+
 export function ProductModal({ product, onClose }: ProductModalProps) {
   const { t } = useTranslation();
   const addProduct = useStore((state) => state.addProduct);
@@ -28,7 +35,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
     product?.minStockLevel?.toString() ?? '10',
   );
   const [unit, setUnit] = useState<'kg' | 'litre' | 'piece'>(product?.unit || 'piece');
-  const [priceUnit, setPriceUnit] = useState(product?.priceUnit || '');
   const [movementType, setMovementType] = useState<StockMovementType>('IN');
   const [movementQty, setMovementQty] = useState('');
   const [movementReason, setMovementReason] = useState('');
@@ -41,7 +47,6 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       setStock(product.stock.toString());
       setMinStockLevel(product.minStockLevel?.toString() ?? '10');
       setUnit(product.unit || 'piece');
-      setPriceUnit(product.priceUnit || '');
       setMovementType('IN');
       setMovementQty('');
       setMovementReason('');
@@ -70,6 +75,8 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
       toast.error(t('inventory.toast_invalid_min_stock'));
       return;
     }
+
+    const priceUnit = getPriceUnitFromUnit(unit);
 
     if (product) {
       updateProduct(product.id, {
@@ -144,18 +151,7 @@ export function ProductModal({ product, onClose }: ProductModalProps) {
               />
             </div>
 
-            <UnitFields
-              unit={unit}
-              priceUnit={priceUnit}
-              onUnitChange={(newUnit) => {
-                setUnit(newUnit);
-                if (newUnit === 'kg') setPriceUnit('KG');
-                else if (newUnit === 'litre') setPriceUnit('L');
-                else setPriceUnit('PCS');
-              }}
-              onPriceUnitChange={setPriceUnit}
-              t={t}
-            />
+            <UnitTypeField unit={unit} onUnitChange={setUnit} t={t} />
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -242,61 +238,29 @@ function ModalPanel({ children }: { children: React.ReactNode }) {
   );
 }
 
-function UnitFields({
+function UnitTypeField({
   unit,
-  priceUnit,
   onUnitChange,
-  onPriceUnitChange,
   t,
 }: {
   unit: 'kg' | 'litre' | 'piece';
-  priceUnit: string;
   onUnitChange: (u: 'kg' | 'litre' | 'piece') => void;
-  onPriceUnitChange: (v: string) => void;
-  t: (key: string) => string;
-}) {
-  return (
-    <>
-      <div>
-        <label className="mb-2 block text-sm font-medium text-gray-700">
-          {t('inventory.field_unit_type')}
-        </label>
-        <select
-          value={unit}
-          onChange={(e) => onUnitChange(e.target.value as 'kg' | 'litre' | 'piece')}
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
-        >
-          <option value="piece">{t('inventory.unit_piece')}</option>
-          <option value="kg">{t('inventory.unit_kg')}</option>
-          <option value="litre">{t('inventory.unit_litre')}</option>
-        </select>
-      </div>
-      <PriceUnitField priceUnit={priceUnit} onChange={onPriceUnitChange} t={t} />
-    </>
-  );
-}
-
-function PriceUnitField({
-  priceUnit,
-  onChange,
-  t,
-}: {
-  priceUnit: string;
-  onChange: (v: string) => void;
   t: (key: string) => string;
 }) {
   return (
     <div>
       <label className="mb-2 block text-sm font-medium text-gray-700">
-        {t('inventory.field_price_unit')}
+        {t('inventory.field_unit_type')}
       </label>
-      <input
-        type="text"
-        value={priceUnit}
-        onChange={(e) => onChange(e.target.value)}
+      <select
+        value={unit}
+        onChange={(e) => onUnitChange(e.target.value as 'kg' | 'litre' | 'piece')}
         className="w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500"
-        placeholder={t('inventory.placeholder_price_unit')}
-      />
+      >
+        <option value="piece">{t('inventory.unit_piece')}</option>
+        <option value="kg">{t('inventory.unit_kg')}</option>
+        <option value="litre">{t('inventory.unit_litre')}</option>
+      </select>
     </div>
   );
 }
