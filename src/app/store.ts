@@ -71,6 +71,7 @@ interface StoreState {
   ) => boolean;
   syncStockAlerts: () => void;
   dismissAlert: (alertId: string) => void;
+  dismissAllPendingAlerts: () => void;
   addToCart: (product: Product) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
@@ -244,6 +245,14 @@ export const useStore = create<StoreState>((set, get) => ({
     set((state) => ({
       stockAlerts: state.stockAlerts.map((a) =>
         a.id === alertId ? { ...a, status: 'SENT' as const } : a,
+      ),
+    })),
+
+  /** Marks every pending alert as SENT so the dashboard banner clears. */
+  dismissAllPendingAlerts: () =>
+    set((state) => ({
+      stockAlerts: state.stockAlerts.map((a) =>
+        a.status === 'PENDING' ? { ...a, status: 'SENT' as const } : a,
       ),
     })),
 

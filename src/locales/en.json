@@ -364,6 +364,7 @@
     "type_low": "Low stock",
     "type_out": "Out of stock",
     "action_view_product": "View product",
-    "action_dismiss": "Dismiss"
+    "action_dismiss": "Dismiss",
+    "action_dismiss_all": "Dismiss all alerts"
   }
 }

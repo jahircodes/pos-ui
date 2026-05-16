@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePendingAlerts, useStore } from '../store';
 import { useAuthStore } from '../authStore';
-import { Bell, ChevronRight, IndianRupee, ShoppingBag, FileText, TrendingUp } from 'lucide-react';
+import { Bell, ChevronRight, IndianRupee, ShoppingBag, FileText, TrendingUp, X } from 'lucide-react';
 import { getAppLocale } from '../../i18n.js';
 import { AlertsSheet } from './AlertsSheet';
 
@@ -34,6 +34,7 @@ export function Dashboard({
   const shopName = useAuthStore((s) => s.shopName);
   const transactions = useStore((state) => state.transactions);
   const pendingAlerts = usePendingAlerts();
+  const dismissAllPendingAlerts = useStore((s) => s.dismissAllPendingAlerts);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const lowCount = pendingAlerts.filter((a) => a.type === 'LOW_STOCK').length;
   const outCount = pendingAlerts.filter((a) => a.type === 'OUT_OF_STOCK').length;
@@ -92,6 +93,7 @@ export function Dashboard({
             lowCount={lowCount}
             outCount={outCount}
             onViewAll={onViewAlerts}
+            onDismissAll={dismissAllPendingAlerts}
             t={t}
           />
         ) : null}
@@ -189,19 +191,22 @@ function AlertsSummaryCard({
   lowCount,
   outCount,
   onViewAll,
+  onDismissAll,
   t,
 }: {
   lowCount: number;
   outCount: number;
   onViewAll: () => void;
+  onDismissAll: () => void;
   t: (key: string, opts?: Record<string, unknown>) => string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onViewAll}
-      className="flex w-full items-center gap-2.5 overflow-hidden rounded-xl border border-gray-200/90 bg-white px-3 py-2.5 text-left shadow-sm ring-1 ring-black/[0.03] active:bg-gray-50/80"
-    >
+    <div className="flex w-full items-stretch overflow-hidden rounded-xl border border-gray-200/90 bg-white shadow-sm ring-1 ring-black/[0.03]">
+      <button
+        type="button"
+        onClick={onViewAll}
+        className="flex min-w-0 flex-1 items-center gap-2.5 px-3 py-2.5 text-left active:bg-gray-50/80"
+      >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
           <Bell className="h-4 w-4" />
         </div>
@@ -221,8 +226,17 @@ function AlertsSummaryCard({
             </span>
           ) : null}
         </div>
-      <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
-    </button>
+        <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" aria-hidden />
+      </button>
+      <button
+        type="button"
+        onClick={onDismissAll}
+        aria-label={t('alerts.action_dismiss_all')}
+        className="flex shrink-0 items-center justify-center border-l border-gray-100 px-3 text-gray-500 active:bg-gray-50"
+      >
+        <X className="h-4 w-4" aria-hidden />
+      </button>
+    </div>
   );
 }
 

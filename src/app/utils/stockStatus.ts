@@ -26,3 +26,10 @@ export function getStockLevel(product: Pick<Product, 'stock' | 'minStockLevel'>)
   }
   return 'ok';
 }
+
+/** Status dot shown in inventory and alerts (matches product list). */
+export function getStockStatusDot(level: StockLevel): string {
+  if (level === 'out') return '🔴';
+  if (level === 'low') return '🟡';
+  return '🟢';
+}
