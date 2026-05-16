@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
@@ -9,11 +9,14 @@ import {
   LogOut,
   Store,
   UserRound,
-  X,
 } from 'lucide-react';
 import { ChangePasswordScreen } from './ChangePasswordScreen';
+import { ProfileSettingsScreen } from './ProfileSettingsScreen';
+import { ShopInfoSettingsScreen } from './ShopInfoSettingsScreen';
+import { PlansSettingsScreen } from './PlansSettingsScreen';
 import { changeAppLanguage } from '../../i18n.js';
 import { useAuthStore } from '../authStore';
+import { formatMobileDisplay } from '../utils/formatMobile';
 
 interface SettingsScreenProps {
   onBack?: () => void;
@@ -51,12 +54,7 @@ interface ConfirmationModalProps {
   onCancel: () => void;
 }
 
-interface PlaceholderModalProps {
-  isOpen: boolean;
-  title: string;
-  description: string;
-  onClose: () => void;
-}
+type SettingsSubScreen = '' | 'profile' | 'shop' | 'plan';
 
 /**
  * Renders a mobile-first settings screen for profile, shop, subscription, and logout actions.
@@ -64,48 +62,31 @@ interface PlaceholderModalProps {
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { t, i18n } = useTranslation();
   const shopName = useAuthStore((s) => s.shopName);
+  const userName = useAuthStore((s) => s.userName);
+  const mobileDigits = useAuthStore((s) => s.mobileDigits);
+  const activePlanId = useAuthStore((s) => s.activePlanId);
   const logout = useAuthStore((s) => s.logout);
-  const [isProfileLoading, setIsProfileLoading] = useState(true);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
-  const [activePlaceholder, setActivePlaceholder] = useState<'' | 'profile' | 'shop' | 'plan'>('');
+  const [activeSubScreen, setActiveSubScreen] = useState<SettingsSubScreen>(''); // profile | shop | plan
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setIsProfileLoading(false);
-    }, 1200);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, []);
-
-  const handleOpenPlaceholder = (screen: 'profile' | 'shop' | 'plan') => {
-    setActivePlaceholder(screen);
-  };
-
-  const handleClosePlaceholder = () => {
-    setActivePlaceholder('');
-  };
+  const profileDisplayName = userName.trim() || t('settings.profile_name_fallback');
 
   if (isChangePasswordOpen) {
     return <ChangePasswordScreen onBack={() => setIsChangePasswordOpen(false)} />;
   }
 
-  const placeholderContentMap = {
-    profile: {
-      titleKey: 'settings.placeholder_profile_title',
-      descriptionKey: 'settings.placeholder_profile_desc',
-    },
-    shop: {
-      titleKey: 'settings.placeholder_shop_title',
-      descriptionKey: 'settings.placeholder_shop_desc',
-    },
-    plan: {
-      titleKey: 'settings.placeholder_plan_title',
-      descriptionKey: 'settings.placeholder_plan_desc',
-    },
-  } as const;
+  if (activeSubScreen === 'profile') {
+    return <ProfileSettingsScreen onBack={() => setActiveSubScreen('')} />;
+  }
+
+  if (activeSubScreen === 'shop') {
+    return <ShopInfoSettingsScreen onBack={() => setActiveSubScreen('')} />;
+  }
+
+  if (activeSubScreen === 'plan') {
+    return <PlansSettingsScreen onBack={() => setActiveSubScreen('')} />;
+  }
 
   const isEnglishActive = i18n.language === 'en' || i18n.language.startsWith('en');
   const isTamilActive = i18n.language === 'ta' || i18n.language.startsWith('ta');
@@ -167,22 +148,18 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
           </SettingsCard>
 
           <SettingsCard>
-            {isProfileLoading ? (
-              <ProfileSkeleton />
-            ) : (
-              <button
-                type="button"
-                onClick={() => handleOpenPlaceholder('profile')}
-                className="flex w-full items-center gap-3 rounded-xl p-1 text-left active:bg-gray-50"
-              >
-                <Avatar name="Ravi Kumar" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-base font-semibold text-gray-900">Ravi Kumar</p>
-                  <p className="truncate text-sm text-gray-500">+91 98765 43210</p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400" />
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setActiveSubScreen('profile')}
+              className="flex w-full items-center gap-3 rounded-xl p-1 text-left active:bg-gray-50"
+            >
+              <Avatar name={profileDisplayName} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-semibold text-gray-900">{profileDisplayName}</p>
+                <p className="truncate text-sm text-gray-500">{formatMobileDisplay(mobileDigits)}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-gray-400" />
+            </button>
           </SettingsCard>
 
           <SettingsCard>
@@ -190,7 +167,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               icon={Store}
               title={t('settings.shop_info')}
               subtitle={shopName.trim() || t('settings.shop_info_subtitle_fallback')}
-              onClick={() => handleOpenPlaceholder('shop')}
+              onClick={() => setActiveSubScreen('shop')}
             />
           </SettingsCard>
 
@@ -199,8 +176,12 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
               icon={Crown}
               title={t('settings.pro_plan')}
               subtitle={t('settings.view_plans')}
-              badge={<Badge label={t('settings.badge_active')} variant="success" />}
-              onClick={() => handleOpenPlaceholder('plan')}
+              badge={
+                activePlanId === 'pro' || activePlanId === 'business' ? (
+                  <Badge label={t('settings.badge_active')} variant="success" />
+                ) : undefined
+              }
+              onClick={() => setActiveSubScreen('plan')}
             />
           </SettingsCard>
 
@@ -237,12 +218,6 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         onCancel={() => setIsLogoutModalOpen(false)}
       />
 
-      <PlaceholderModal
-        isOpen={activePlaceholder !== ''}
-        title={activePlaceholder ? t(placeholderContentMap[activePlaceholder].titleKey) : ''}
-        description={activePlaceholder ? t(placeholderContentMap[activePlaceholder].descriptionKey) : ''}
-        onClose={handleClosePlaceholder}
-      />
     </div>
   );
 }
@@ -351,50 +326,6 @@ export function ConfirmationModal({
             {confirmLabel}
           </button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Reusable placeholder modal for upcoming settings pages.
- */
-function PlaceholderModal({ isOpen, title, description, onClose }: PlaceholderModalProps) {
-  const { t } = useTranslation();
-  if (!isOpen) {
-    return null;
-  }
-
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
-      <div className="w-full rounded-t-3xl bg-white p-4 shadow-xl sm:max-w-sm sm:rounded-2xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('common.close_modal')}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-600 active:bg-gray-200"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <p className="text-sm text-gray-600">{description}</p>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Profile skeleton placeholder while profile content loads.
- */
-function ProfileSkeleton() {
-  return (
-    <div className="flex animate-pulse items-center gap-3">
-      <div className="h-14 w-14 rounded-full bg-gray-200" />
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="h-4 w-32 rounded bg-gray-200" />
-        <div className="h-3 w-24 rounded bg-gray-200" />
       </div>
     </div>
   );

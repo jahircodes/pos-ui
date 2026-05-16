@@ -19,15 +19,29 @@ export function deriveDefaultMpin(mobileDigits: string): string {
   return d.slice(-4).padStart(4, '0').slice(-4);
 }
 
+export type UserAccountStatus = 'active' | 'inactive';
+
+export type SubscriptionPlanId = 'starter' | 'pro' | 'business';
+
 interface AuthSessionState {
   isAuthenticated: boolean;
   mobileDigits: string;
   shopName: string;
+  shopAddress: string;
+  shopPhone: string;
+  userName: string;
+  email: string;
+  accountStatus: UserAccountStatus;
+  activePlanId: SubscriptionPlanId;
+  subscriptionEndDate: string;
   mpin: string;
   loginWithMpin: (mobileDigits: string, mpin: string) => boolean;
   registerNewUser: (mobileDigits: string, shopName: string) => void;
   isRegisteredMobile: (mobileDigits: string) => boolean;
   hasCompleteAccount: () => boolean;
+  updateUserProfile: (patch: { userName?: string; email?: string }) => void;
+  updateShopInfo: (patch: { shopName?: string; shopAddress?: string; shopPhone?: string }) => void;
+  setActivePlan: (planId: SubscriptionPlanId) => void;
   /** Called after forgot-flow OTP success; resets MPIN to the default derived from mobile. */
   completeForgotMpin: (mobileDigits: string) => boolean;
   logout: () => void;
@@ -39,6 +53,13 @@ export const useAuthStore = create<AuthSessionState>()(
       isAuthenticated: false,
       mobileDigits: '',
       shopName: '',
+      shopAddress: '',
+      shopPhone: '',
+      userName: '',
+      email: '',
+      accountStatus: 'active' as UserAccountStatus,
+      activePlanId: 'pro' as SubscriptionPlanId,
+      subscriptionEndDate: '2026-12-31',
       mpin: '',
 
       hasCompleteAccount: () => {
@@ -74,7 +95,39 @@ export const useAuthStore = create<AuthSessionState>()(
           isAuthenticated: true,
           mobileDigits: normalized,
           shopName: trimmedName,
+          shopAddress: '',
+          shopPhone: '',
+          userName: '',
+          email: '',
+          accountStatus: 'active',
+          activePlanId: 'starter',
+          subscriptionEndDate: '',
           mpin: deriveDefaultMpin(normalized),
+        });
+      },
+
+      updateUserProfile: (patch) => {
+        set((state) => ({
+          userName: patch.userName !== undefined ? patch.userName.trim() : state.userName,
+          email: patch.email !== undefined ? patch.email.trim() : state.email,
+        }));
+      },
+
+      updateShopInfo: (patch) => {
+        set((state) => ({
+          shopName: patch.shopName !== undefined ? patch.shopName.trim() : state.shopName,
+          shopAddress:
+            patch.shopAddress !== undefined ? patch.shopAddress.trim() : state.shopAddress,
+          shopPhone: patch.shopPhone !== undefined ? patch.shopPhone.trim() : state.shopPhone,
+        }));
+      },
+
+      setActivePlan: (planId) => {
+        const end = new Date();
+        end.setFullYear(end.getFullYear() + 1);
+        set({
+          activePlanId: planId,
+          subscriptionEndDate: end.toISOString().slice(0, 10),
         });
       },
 
@@ -95,6 +148,13 @@ export const useAuthStore = create<AuthSessionState>()(
         isAuthenticated: s.isAuthenticated,
         mobileDigits: s.mobileDigits,
         shopName: s.shopName,
+        shopAddress: s.shopAddress,
+        shopPhone: s.shopPhone,
+        userName: s.userName,
+        email: s.email,
+        accountStatus: s.accountStatus,
+        activePlanId: s.activePlanId,
+        subscriptionEndDate: s.subscriptionEndDate,
         mpin: s.mpin,
       }),
     },
