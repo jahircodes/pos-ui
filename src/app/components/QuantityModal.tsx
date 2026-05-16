@@ -137,27 +137,31 @@ export function QuantityModal({ product, onConfirm, onClose }: QuantityModalProp
               ))}
             </div>
 
-            <div className="flex items-center gap-3">
+            <input
+              type="text"
+              inputMode={isDecimalBased ? 'text' : 'numeric'}
+              value={displayValue}
+              onChange={(e) => handleInputChange(e.target.value)}
+              className="w-full h-14 text-center text-xl font-bold rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            />
+
+            <div className="flex items-center gap-3 mt-3">
               <button
+                type="button"
                 onClick={handleDecrement}
-                className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
               >
                 <Minus className="w-6 h-6" />
               </button>
-
-              <input
-                type="text"
-                inputMode={isDecimalBased ? 'text' : 'numeric'}
-                value={displayValue}
-                onChange={(e) => handleInputChange(e.target.value)}
-                className="flex-1 h-14 text-center text-xl font-bold rounded-xl border-2 border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              />
-
+              <p className="flex-1 text-sm text-center text-gray-600 font-semibold tabular-nums">
+                {displayValue}
+              </p>
               <button
+                type="button"
                 onClick={handleIncrement}
-                className="w-14 h-14 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
+                className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
               >
-                <Plus className="w-6 w-6" />
+                <Plus className="w-6 h-6" />
               </button>
             </div>
 

@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Minus, Plus } from 'lucide-react';
+
+const STEP_KG = 0.25;
 
 interface WeightQuantityInputProps {
   onConfirm: (kg: number) => void;
@@ -35,7 +38,13 @@ export function WeightQuantityInput({
     return k + g / 1000;
   };
 
-  const handlePredefinedClick = (value: number) => {
+  /** Sync kg + grams fields from a single total weight in kg. */
+  const setTotalFromValue = (value: number) => {
+    if (value <= 0) {
+      setKg('0');
+      setGrams('');
+      return;
+    }
     if (value < 1) {
       setKg('0');
       setGrams((value * 1000).toString());
@@ -45,6 +54,23 @@ export function WeightQuantityInput({
       setKg(wholeKg.toString());
       setGrams(remainderGrams > 0 ? remainderGrams.toString() : '');
     }
+  };
+
+  const handlePredefinedClick = (value: number) => {
+    setTotalFromValue(value);
+  };
+
+  const handleIncrement = () => {
+    setTotalFromValue(getTotalKg() + STEP_KG);
+  };
+
+  const handleDecrement = () => {
+    const current = getTotalKg();
+    if (current <= STEP_KG) {
+      setTotalFromValue(0);
+      return;
+    }
+    setTotalFromValue(current - STEP_KG);
   };
 
   const handleKgChange = (value: string) => {
@@ -155,9 +181,25 @@ export function WeightQuantityInput({
                 />
               </div>
             </div>
-            <p className="text-sm text-center text-gray-600 mt-3 font-semibold">
-              {getDisplayText()}
-            </p>
+            <div className="flex items-center gap-3 mt-3">
+              <button
+                type="button"
+                onClick={handleDecrement}
+                className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
+              >
+                <Minus className="w-6 h-6" />
+              </button>
+              <p className="flex-1 text-sm text-center text-gray-600 font-semibold">
+                {getDisplayText()}
+              </p>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           <div className="bg-green-50 rounded-xl p-4 border border-green-100">

@@ -1,5 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Minus, Plus } from 'lucide-react';
+
+const STEP_LITRES = 0.25;
 
 interface LiquidQuantityInputProps {
   onConfirm: (litres: number) => void;
@@ -35,7 +38,13 @@ export function LiquidQuantityInput({
     return l + m / 1000;
   };
 
-  const handlePredefinedClick = (value: number) => {
+  /** Sync litres + ml fields from a single total volume in litres. */
+  const setTotalFromValue = (value: number) => {
+    if (value <= 0) {
+      setLitres('0');
+      setMl('');
+      return;
+    }
     if (value < 1) {
       setLitres('0');
       setMl((value * 1000).toString());
@@ -45,6 +54,23 @@ export function LiquidQuantityInput({
       setLitres(wholeLitres.toString());
       setMl(remainderMl > 0 ? remainderMl.toString() : '');
     }
+  };
+
+  const handlePredefinedClick = (value: number) => {
+    setTotalFromValue(value);
+  };
+
+  const handleIncrement = () => {
+    setTotalFromValue(getTotalLitres() + STEP_LITRES);
+  };
+
+  const handleDecrement = () => {
+    const current = getTotalLitres();
+    if (current <= STEP_LITRES) {
+      setTotalFromValue(0);
+      return;
+    }
+    setTotalFromValue(current - STEP_LITRES);
   };
 
   const handleLitresChange = (value: string) => {
@@ -155,9 +181,25 @@ export function LiquidQuantityInput({
                 />
               </div>
             </div>
-            <p className="text-sm text-center text-gray-600 mt-3 font-semibold">
-              {getDisplayText()}
-            </p>
+            <div className="flex items-center gap-3 mt-3">
+              <button
+                type="button"
+                onClick={handleDecrement}
+                className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
+              >
+                <Minus className="w-6 h-6" />
+              </button>
+              <p className="flex-1 text-sm text-center text-gray-600 font-semibold">
+                {getDisplayText()}
+              </p>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                className="w-14 h-14 shrink-0 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
           </div>
 
           <div className="bg-green-50 rounded-xl p-4 border border-green-100">
