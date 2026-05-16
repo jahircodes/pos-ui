@@ -365,6 +365,7 @@
     "type_out": "இருப்பு இல்லை",
     "action_view_product": "பொருள் பார்",
     "action_dismiss": "நிராகரி",
-    "action_dismiss_all": "அனைத்து எச்சரிக்கைகளையும் நிராகரி"
+    "action_dismiss_all": "அனைத்து எச்சரிக்கைகளையும் நிராகரி",
+    "action_clear_all": "அனைத்தையும் அழி"
   }
 }
