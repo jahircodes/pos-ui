@@ -12,6 +12,8 @@ export interface Shop {
   shopName: string;
   address: string;
   phone: string;
+  /** Merchant UPI VPA for QR payments (e.g. shopname@upi). */
+  upiId: string;
   /** When false, shop is hidden from day-to-day use; staff data is kept. */
   isActive: boolean;
 }
@@ -24,6 +26,7 @@ const INITIAL_SHOPS: Shop[] = [
     shopName: 'Main Store',
     address: '12 Market Road, Bengaluru',
     phone: '08041234567',
+    upiId: 'mainstore@upi',
     isActive: true,
   },
 ];
@@ -468,6 +471,7 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
   const [shopName, setShopName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
+  const [upiId, setUpiId] = useState('');
 
   useEffect(() => {
     if (!isOpen) {
@@ -476,6 +480,7 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
     setShopName(initialShop?.shopName ?? '');
     setAddress(initialShop?.address ?? '');
     setPhone(initialShop?.phone ?? '');
+    setUpiId(initialShop?.upiId ?? '');
   }, [isOpen, initialShop]);
 
   const isSaveDisabled = !shopName.trim() || !address.trim() || !phone.trim();
@@ -494,6 +499,7 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
               shopName: shopName.trim(),
               address: address.trim(),
               phone: phone.trim(),
+              upiId: upiId.trim(),
               isActive: initialShop ? initialShop.isActive : true,
             },
             initialShop?.shopId
@@ -539,6 +545,22 @@ function ShopFormModal({ isOpen, initialShop, onClose, onSave }: ShopFormModalPr
             placeholder={t('business.placeholder_shop_phone')}
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
+        </div>
+        <div>
+          <label htmlFor="shop-upi-id" className="mb-1 block text-sm font-medium text-gray-700">
+            {t('business.field_upi_id')}
+          </label>
+          <input
+            id="shop-upi-id"
+            type="text"
+            value={upiId}
+            onChange={(event) => setUpiId(event.target.value)}
+            placeholder={t('business.placeholder_upi_id')}
+            autoComplete="off"
+            inputMode="email"
+            className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
+          />
+          <p className="mt-1 text-xs text-gray-500">{t('business.upi_id_hint')}</p>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-2">
           <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />

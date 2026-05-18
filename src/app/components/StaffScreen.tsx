@@ -440,16 +440,12 @@ export function Modal({ isOpen, title, children, onClose }: ModalProps) {
 }
 
 /**
- * Renders add/edit staff modal: add flow uses password fields and fixed staff role;
- * edit flow updates name and mobile only.
+ * Renders add/edit staff modal: name and mobile only; new staff get role staff and active status.
  */
 function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFormModalProps) {
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [mobileNumber, setMobileNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordMismatchMessage, setPasswordMismatchMessage] = useState('');
 
   const isAddMode = !initialStaffMember;
 
@@ -460,14 +456,9 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
 
     setName(initialStaffMember?.name ?? '');
     setMobileNumber(initialStaffMember?.mobileNumber ?? '');
-    setPassword('');
-    setConfirmPassword('');
-    setPasswordMismatchMessage('');
   }, [isOpen, initialStaffMember]);
 
-  const isSaveDisabled = isAddMode
-    ? !name.trim() || !mobileNumber.trim() || !password || !confirmPassword
-    : !name.trim() || !mobileNumber.trim();
+  const isSaveDisabled = !name.trim() || !mobileNumber.trim();
 
   return (
     <Modal
@@ -481,14 +472,6 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
           event.preventDefault();
           if (isSaveDisabled) {
             return;
-          }
-
-          if (isAddMode) {
-            if (password !== confirmPassword) {
-              setPasswordMismatchMessage(t('staff.password_mismatch'));
-              return;
-            }
-            setPasswordMismatchMessage('');
           }
 
           onSave(
@@ -530,50 +513,6 @@ function StaffFormModal({ isOpen, initialStaffMember, onClose, onSave }: StaffFo
             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
           />
         </div>
-
-        {isAddMode ? (
-          <>
-            <div>
-              <label htmlFor="staff-password" className="mb-1 block text-sm font-medium text-gray-700">
-                {t('staff.field_password')}
-              </label>
-              <input
-                id="staff-password"
-                type="password"
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  setPasswordMismatchMessage('');
-                }}
-                placeholder={t('staff.placeholder_password')}
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="staff-confirm-password" className="mb-1 block text-sm font-medium text-gray-700">
-                {t('staff.field_confirm_password')}
-              </label>
-              <input
-                id="staff-confirm-password"
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => {
-                  setConfirmPassword(event.target.value);
-                  setPasswordMismatchMessage('');
-                }}
-                placeholder={t('staff.placeholder_confirm_password')}
-                autoComplete="new-password"
-                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-base outline-none focus:border-green-500"
-              />
-            </div>
-            {passwordMismatchMessage ? (
-              <p className="text-sm text-red-600" role="alert">
-                {passwordMismatchMessage}
-              </p>
-            ) : null}
-          </>
-        ) : null}
 
         <div className="grid grid-cols-2 gap-3 pt-2">
           <Button label={t('common.cancel')} variant="secondary" onClick={onClose} />
