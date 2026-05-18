@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ChevronRight,
   Crown,
+  FileText,
   KeyRound,
   Languages,
   LogOut,
@@ -14,6 +15,7 @@ import { ChangePasswordScreen } from './ChangePasswordScreen';
 import { ProfileSettingsScreen } from './ProfileSettingsScreen';
 import { ShopInfoSettingsScreen } from './ShopInfoSettingsScreen';
 import { PlansSettingsScreen } from './PlansSettingsScreen';
+import { InvoicesSettingsScreen } from './InvoicesSettingsScreen';
 import { changeAppLanguage } from '../../i18n.js';
 import { useAuthStore } from '../authStore';
 import { formatMobileDisplay } from '../utils/formatMobile';
@@ -54,7 +56,7 @@ interface ConfirmationModalProps {
   onCancel: () => void;
 }
 
-type SettingsSubScreen = '' | 'profile' | 'shop' | 'plan';
+type SettingsSubScreen = '' | 'profile' | 'shop' | 'plan' | 'invoices';
 
 /**
  * Renders a mobile-first settings screen for profile, shop, subscription, and logout actions.
@@ -86,6 +88,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   if (activeSubScreen === 'plan') {
     return <PlansSettingsScreen onBack={() => setActiveSubScreen('')} />;
+  }
+
+  if (activeSubScreen === 'invoices') {
+    return <InvoicesSettingsScreen onBack={() => setActiveSubScreen('')} />;
   }
 
   const isEnglishActive = i18n.language === 'en' || i18n.language.startsWith('en');
@@ -182,6 +188,15 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                 ) : undefined
               }
               onClick={() => setActiveSubScreen('plan')}
+            />
+          </SettingsCard>
+
+          <SettingsCard>
+            <SettingsItem
+              icon={FileText}
+              title={t('settings.invoices')}
+              subtitle={t('settings.invoices_sub')}
+              onClick={() => setActiveSubScreen('invoices')}
             />
           </SettingsCard>
 
